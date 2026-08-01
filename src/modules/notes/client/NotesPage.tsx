@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { ModuleContext } from "@/lib/kernel/context";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { NOTES_COLLECTION, type NoteDoc, type NoteDTO } from "../db/collections";
 import { NotesWorkspace } from "./NotesWorkspace";
 
@@ -21,7 +22,7 @@ export async function NotesPage({ ctx }: { ctx: ModuleContext }) {
   }));
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton variant="split" />}>
       <NotesWorkspace initialNotes={initialNotes} />
     </Suspense>
   );

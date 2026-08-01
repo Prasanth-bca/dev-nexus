@@ -9,6 +9,7 @@ const STATIC_DESTINATIONS: Array<{ id: string; title: string; description: strin
   { id: "dashboard", title: "Dashboard", description: "Overview of installed modules", url: "/dashboard", keywords: ["dashboard", "home", "overview"] },
   { id: "settings", title: "Settings", description: "Account email & password", url: "/dashboard/settings", keywords: ["settings", "account", "password", "email", "profile"] },
   { id: "secrets", title: "Secret Manager", description: "Encrypted API keys and credentials", url: "/dashboard/secrets", keywords: ["secrets", "api key", "credentials", "token"] },
+  { id: "about", title: "About", description: "What Dev Nexus is and how it works", url: "/dashboard/about", keywords: ["about", "help", "docs", "modules", "architecture", "info"] },
 ];
 
 export async function GET(req: Request) {

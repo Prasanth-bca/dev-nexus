@@ -1,5 +1,7 @@
 "use client";
 
+import { StickyNote } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import type { NoteDTO } from "../db/collections";
 import { NoteCard } from "./NoteCard";
 
@@ -19,21 +21,27 @@ export function NoteGrid({
   onRequestDelete: (id: string) => void;
 }) {
   return (
-    <div className="@container flex-1 min-w-0 min-h-0 overflow-y-auto p-3">
+    <div className="@container min-h-0 min-w-0 flex-1 overflow-y-auto p-4">
       {notes.length === 0 ? (
-        <div className="text-sm text-zinc-400 px-3 py-10 text-center">No notes found.</div>
+        <EmptyState
+          icon={StickyNote}
+          title="No notes found"
+          description="Nothing matches the current filter. Try a different search, or create a new note."
+          accent="var(--module-notes)"
+        />
       ) : (
-        <div className="grid grid-cols-1 @sm:grid-cols-2 @3xl:grid-cols-3 gap-3">
-          {notes.map((note) => (
-            <NoteCard
-              key={note._id}
-              note={note}
-              active={note._id === selectedId}
-              onSelect={() => onSelect(note._id)}
-              onTogglePin={() => onTogglePin(note._id)}
-              onToggleFavorite={() => onToggleFavorite(note._id)}
-              onRequestDelete={() => onRequestDelete(note._id)}
-            />
+        <div className="stagger grid grid-cols-1 gap-3 @sm:grid-cols-2 @3xl:grid-cols-3">
+          {notes.map((note, i) => (
+            <div key={note._id} style={{ "--i": i } as React.CSSProperties}>
+              <NoteCard
+                note={note}
+                active={note._id === selectedId}
+                onSelect={() => onSelect(note._id)}
+                onTogglePin={() => onTogglePin(note._id)}
+                onToggleFavorite={() => onToggleFavorite(note._id)}
+                onRequestDelete={() => onRequestDelete(note._id)}
+              />
+            </div>
           ))}
         </div>
       )}

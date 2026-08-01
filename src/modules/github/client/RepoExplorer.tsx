@@ -35,16 +35,18 @@ export function RepoExplorer() {
   }, [query]);
 
   return (
-    <div className="flex flex-1 min-h-0 gap-0 overflow-hidden rounded-lg border">
-      <div className={`${selected ? "hidden md:flex" : "flex"} w-full md:w-80 shrink-0 flex-col border-r`}>
-        <div className="border-b p-2">
+    <div className="animate-fade-in flex flex-1 min-h-0 gap-3 overflow-hidden">
+      {/* Repository list — the floating glass panel of this screen. */}
+      <div className={`${selected ? "hidden md:flex" : "flex"} glass w-full shrink-0 flex-col overflow-hidden rounded-xl md:w-80`}>
+        <div className="border-b border-[var(--glass-border)] p-2.5">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search repositories…"
-              className="h-8 pl-8 text-sm"
+              aria-label="Search repositories"
+              className="h-9 rounded-lg pl-8 text-sm"
             />
           </div>
         </div>
@@ -53,7 +55,10 @@ export function RepoExplorer() {
         </div>
       </div>
 
-      <div className={`${selected ? "flex" : "hidden md:flex"} flex-1 min-w-0`}>
+      {/* Detail pane — code, commits and tables live here, so it stays solid and unblurred. */}
+      <div
+        className={`${selected ? "flex" : "hidden md:flex"} flex-1 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card`}
+      >
         <RepoDetail fullName={selected} onClose={() => setSelected(null)} />
       </div>
     </div>

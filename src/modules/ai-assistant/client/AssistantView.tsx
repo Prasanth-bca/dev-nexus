@@ -1,17 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import type { ProviderDTO } from "../db/collections";
+import { MessageSquare, Plug, Sparkles, Wrench } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getModuleAccent } from "@/lib/icon-map";
+import { PROVIDER_LABELS, type ProviderDTO } from "../db/collections";
 import { ChatView } from "./ChatView";
 import { ProvidersView } from "./ProvidersView";
 import { ToolSettingsView } from "./ToolSettingsView";
 
-function tabClass(active: boolean) {
-  return `text-xs px-3 py-1.5 rounded-md border ${
-    active
-      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-transparent"
-      : "border-zinc-200 dark:border-zinc-800"
-  }`;
+const ACCENT = getModuleAccent("ai-assistant");
+
+/** Accent-tinted pill naming the provider/model every chat turn is routed through. */
+function ProviderBadge({ provider }: { provider: ProviderDTO }) {
+  return (
+    <span
+      style={{ "--accent": ACCENT } as React.CSSProperties}
+      title={`${PROVIDER_LABELS[provider.provider]} · ${provider.model}`}
+      className="hidden max-w-[18rem] items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--accent)] sm:inline-flex"
+    >
+      <Sparkles className="h-3 w-3 shrink-0" />
+      <span className="truncate">{PROVIDER_LABELS[provider.provider]}</span>
+      {provider.model && <span className="truncate font-mono text-[11px] opacity-70">{provider.model}</span>}
+    </span>
+  );
 }
 
 export function AssistantView({ initialProviders }: { initialProviders: ProviderDTO[] }) {
@@ -23,30 +36,51 @@ export function AssistantView({ initialProviders }: { initialProviders: Provider
     setProviders(await res.json());
   }
 
+  const activeProvider = providers.find((p) => p.active);
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <h1 className="text-lg font-semibold">AI Assistant</h1>
-        <div className="flex gap-1">
-          <button type="button" onClick={() => setTab("chat")} className={tabClass(tab === "chat")}>
-            Chat
-          </button>
-          <button type="button" onClick={() => setTab("providers")} className={tabClass(tab === "providers")}>
-            Providers
-          </button>
-          <button type="button" onClick={() => setTab("tools")} className={tabClass(tab === "tools")}>
-            Tools
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="AI Assistant"
+        description="Chat with a model that can act on your workspace."
+        icon={Sparkles}
+        accent={ACCENT}
+        className="mb-4"
+        actions={activeProvider ? <ProviderBadge provider={activeProvider} /> : undefined}
+      />
 
-      {tab === "chat" ? (
-        <ChatView hasActiveProvider={providers.some((p) => p.active)} onNeedProviders={() => setTab("providers")} />
-      ) : tab === "providers" ? (
-        <ProvidersView providers={providers} onChange={refreshProviders} />
-      ) : (
-        <ToolSettingsView />
-      )}
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as "chat" | "providers" | "tools")}
+        className="flex flex-1 min-h-0 flex-col"
+      >
+        <TabsList className="mb-4 h-9 shrink-0 self-start">
+          <TabsTrigger value="chat" className="px-3">
+            <MessageSquare />
+            Chat
+          </TabsTrigger>
+          <TabsTrigger value="providers" className="px-3">
+            <Plug />
+            Providers
+          </TabsTrigger>
+          <TabsTrigger value="tools" className="px-3">
+            <Wrench />
+            Tools
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="chat" className="flex flex-1 min-h-0 flex-col">
+          <ChatView hasActiveProvider={providers.some((p) => p.active)} onNeedProviders={() => setTab("providers")} />
+        </TabsContent>
+
+        <TabsContent value="providers" className="animate-fade-in min-h-0 overflow-y-auto">
+          <ProvidersView providers={providers} onChange={refreshProviders} />
+        </TabsContent>
+
+        <TabsContent value="tools" className="animate-fade-in min-h-0 overflow-y-auto">
+          <ToolSettingsView />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

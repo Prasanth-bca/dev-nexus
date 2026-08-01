@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { Settings } from "lucide-react";
 import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 import { getUserById } from "@/lib/kernel/auth-password";
+import { PageHeader } from "@/components/page-header";
 import { AccountForm } from "./AccountForm";
 
 export default async function SettingsPage() {
@@ -11,9 +13,14 @@ export default async function SettingsPage() {
   if (!user) redirect("/login");
 
   return (
-    <div className="max-w-md">
-      <h1 className="text-lg font-semibold mb-1">Settings</h1>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Account</p>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+      <PageHeader
+        title="Settings"
+        description="Manage the credentials for your admin account."
+        icon={Settings}
+        accent="var(--muted-foreground)"
+        className="mb-0"
+      />
       <AccountForm currentEmail={user.email} />
     </div>
   );

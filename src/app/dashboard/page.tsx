@@ -3,14 +3,14 @@ import { getModules } from "@/modules/loaded";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { DashboardWidgetCard } from "@/components/dashboard-widget-card";
-import { Badge } from "@/components/ui/badge";
-import { getModuleIcon } from "@/lib/icon-map";
+import { getModuleAccent, getModuleIcon } from "@/lib/icon-map";
 import type { DashboardWidget } from "@/lib/kernel/types";
 
 interface WidgetEntry {
   id: string;
   title: string;
   icon: LucideIcon;
+  accent: string;
   widget: DashboardWidget;
 }
 
@@ -27,6 +27,7 @@ export default async function DashboardHome() {
             id: m.module.manifest.id,
             title: m.module.manifest.name,
             icon: getModuleIcon(m.module.manifest.icon),
+            accent: getModuleAccent(m.module.manifest.id),
             widget,
           };
         } catch {
@@ -37,30 +38,27 @@ export default async function DashboardHome() {
     )
   ).filter((w): w is WidgetEntry => w !== null);
 
+  const enabledCount = loaded.filter((m) => m.enabled).length;
+
   return (
-    <div>
-      <PageHeader title="Dashboard" description="What's happening across Dev Nexus." />
+    <div className="animate-fade-in mx-auto max-w-7xl">
+      <PageHeader
+        title="Dashboard"
+        description={`${enabledCount} module${enabledCount === 1 ? "" : "s"} active — here's what's happening.`}
+        icon={LayoutGrid}
+      />
 
       {widgets.length === 0 ? (
         <EmptyState icon={LayoutGrid} title="No widgets yet" description="Enable a module to see its activity here." />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {widgets.map((w) => (
-            <DashboardWidgetCard key={w.id} title={w.title} icon={w.icon} widget={w.widget} />
+        <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {widgets.map((w, i) => (
+            <div key={w.id} style={{ "--i": i } as React.CSSProperties}>
+              <DashboardWidgetCard title={w.title} icon={w.icon} widget={w.widget} accent={w.accent} />
+            </div>
           ))}
         </div>
       )}
-
-      <div className="mt-10">
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Modules</h2>
-        <div className="flex flex-wrap gap-2">
-          {loaded.map(({ module, enabled }) => (
-            <Badge key={module.manifest.id} variant={enabled ? "secondary" : "outline"}>
-              {module.manifest.name} · {enabled ? "enabled" : "disabled"}
-            </Badge>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

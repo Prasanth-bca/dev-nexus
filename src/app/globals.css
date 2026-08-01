@@ -5,40 +5,124 @@
 @custom-variant dark (&:is(.dark *));
 @plugin "@tailwindcss/typography";
 
+/* ---------------------------------------------------------------------------
+   Dev Nexus design system — modern glassmorphism.
+
+   Blur is deliberately reserved for floating/overlay surfaces (sidebar, command
+   palette, modals, dropdowns) and never applied to reading surfaces (editors,
+   markdown preview, tables, code blocks). backdrop-filter is one of the most
+   expensive CSS properties to composite, so --glass-blur is tuned conservatively
+   and defined once here rather than being hardcoded per component.
+--------------------------------------------------------------------------- */
+
 :root {
   color-scheme: light;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Surfaces */
+  --background: #f6f7fb;
+  --foreground: #0f172a;
+  --card: rgb(255 255 255 / 0.72);
+  --card-foreground: #0f172a;
+  --popover: rgb(255 255 255 / 0.86);
+  --popover-foreground: #0f172a;
+
+  /* Brand + intent */
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: rgb(15 23 42 / 0.05);
+  --secondary-foreground: #0f172a;
+  --muted: rgb(15 23 42 / 0.04);
+  --muted-foreground: #64748b;
+  --accent: rgb(99 102 241 / 0.1);
+  --accent-foreground: #4338ca;
+  --destructive: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+
+  --border: rgb(15 23 42 / 0.08);
+  --input: rgb(15 23 42 / 0.1);
+  --ring: #6366f1;
+
+  --radius: 0.75rem;
+
+  --sidebar: rgb(255 255 255 / 0.7);
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(99 102 241 / 0.1);
+  --sidebar-accent-foreground: #4338ca;
+  --sidebar-border: rgb(15 23 42 / 0.08);
+  --sidebar-ring: #6366f1;
+
+  /* Glassmorphism knobs — tuned once, consumed everywhere. */
+  --glass-blur: 14px;
+  --glass-blur-strong: 20px;
+  --glass-bg: rgb(255 255 255 / 0.72);
+  --glass-bg-strong: rgb(255 255 255 / 0.85);
+  --glass-border: rgb(15 23 42 / 0.08);
+  --glass-shadow: 0 8px 32px rgb(15 23 42 / 0.08);
+  --glass-shadow-lift: 0 16px 48px rgb(15 23 42 / 0.12);
+
+  /* Ambient background wash */
+  --glow-1: rgb(99 102 241 / 0.16);
+  --glow-2: rgb(139 92 246 / 0.12);
+  --glow-3: rgb(6 182 212 / 0.1);
+
+  /* Per-module accents — each module owns one, used for icons, active states,
+     and the colored top border on its dashboard widget. */
+  --module-notes: #fbbf24;
+  --module-ai: #06b6d4;
+  --module-gmail: #3b82f6;
+  --module-github: #a855f7;
+  --module-vault: #8b5cf6;
+  --module-activity: #ec4899;
+  --module-secrets: #10b981;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #070b14;
+  --foreground: #ffffff;
+  --card: rgb(20 25 40 / 0.75);
+  --card-foreground: #ffffff;
+  --popover: rgb(20 25 40 / 0.9);
+  --popover-foreground: #ffffff;
+
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: rgb(255 255 255 / 0.06);
+  --secondary-foreground: #ffffff;
+  --muted: rgb(255 255 255 / 0.05);
+  --muted-foreground: #94a3b8;
+  --accent: rgb(99 102 241 / 0.16);
+  --accent-foreground: #c7d2fe;
+  --destructive: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+
+  --border: rgb(255 255 255 / 0.08);
+  --input: rgb(255 255 255 / 0.1);
+  --ring: #6366f1;
+
+  --sidebar: rgb(15 23 42 / 0.6);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(99 102 241 / 0.16);
+  --sidebar-accent-foreground: #c7d2fe;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #6366f1;
+
+  --glass-bg: rgb(20 25 40 / 0.75);
+  --glass-bg-strong: rgb(20 25 40 / 0.88);
+  --glass-border: rgb(255 255 255 / 0.08);
+  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.4);
+  --glass-shadow-lift: 0 16px 48px rgb(0 0 0 / 0.55);
+
+  --glow-1: rgb(99 102 241 / 0.18);
+  --glow-2: rgb(139 92 246 / 0.14);
+  --glow-3: rgb(6 182 212 / 0.1);
 }
 
 @theme inline {
@@ -47,6 +131,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -55,15 +140,13 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -76,6 +159,15 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  --color-module-notes: var(--module-notes);
+  --color-module-ai: var(--module-ai);
+  --color-module-gmail: var(--module-gmail);
+  --color-module-github: var(--module-github);
+  --color-module-vault: var(--module-vault);
+  --color-module-activity: var(--module-activity);
+  --color-module-secrets: var(--module-secrets);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -85,12 +177,104 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Layered ambient wash. Fixed attachment keeps the glow anchored while
+       content scrolls, and gradients paint once — unlike blur, this is cheap. */
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% 0%, var(--glow-1), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 10%, var(--glow-2), transparent 55%),
+      radial-gradient(ellipse 90% 70% at 50% 100%, var(--glow-3), transparent 65%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Slim, unobtrusive scrollbars that match the theme instead of OS chrome. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
   }
 }
 
+@layer utilities {
+  /* Standard floating glass panel — cards, popovers, sidebars. */
+  .glass {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Higher opacity + blur for surfaces that sit above everything (modals,
+     command palette) where text legibility matters most. */
+  .glass-strong {
+    background-color: var(--glass-bg-strong);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.5);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.5);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-lift);
+  }
+
+  /* Solid equivalent for reading surfaces — same palette, no compositing cost. */
+  .surface {
+    background-color: color-mix(in srgb, var(--card) 100%, transparent);
+    border: 1px solid var(--border);
+  }
+
+  /* Hover lift shared by every interactive card. GPU-friendly: only transform,
+     box-shadow and border-color animate — never width/height/top/left. */
+  .lift {
+    transition:
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 200ms ease,
+      border-color 200ms ease;
+    will-change: transform;
+  }
+  .lift:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--glass-shadow-lift);
+  }
+
+  /* Focus glow for inputs. */
+  .focus-glow:focus-visible,
+  .focus-glow:focus-within {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 22%, transparent);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--foreground), var(--muted-foreground));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Animation vocabulary — everything ≤250ms, transform/opacity only. */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -100,52 +284,92 @@
   }
 }
 
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 180ms ease-out;
 }
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+.animate-fade-in-up {
+  animation: fade-in-up 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animate-slide-in-right {
+  animation: slide-in-right 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animate-scale-in {
+  animation: scale-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+/* Staggered list entrance — set --i on each child. */
+.stagger > * {
+  animation: fade-in-up 220ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+
+/* Accessibility: honour both reduced-motion and reduced-transparency. The
+   latter matters for the glass language specifically — it also happens to be
+   the cheapest rendering path, so this doubles as a low-end-hardware escape. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  body {
-    @apply bg-background text-foreground;
+  .lift:hover {
+    transform: none;
   }
-  html {
-    @apply font-sans;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-strong {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background-color: var(--background);
   }
 }

@@ -78,8 +78,15 @@ export function SemanticSearchDialog({ onSelect }: { onSelect: (id: string) => v
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(true)} className="gap-1.5">
-        <Sparkles className="h-3.5 w-3.5" />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => handleOpenChange(true)}
+        style={{ "--accent": "var(--module-notes)" } as React.CSSProperties}
+        className="w-full gap-1.5 hover:border-[color-mix(in_srgb,var(--accent)_35%,transparent)] hover:text-foreground"
+      >
+        <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
         AI Search
       </Button>
 

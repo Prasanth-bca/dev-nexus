@@ -247,7 +247,7 @@ export function NotesWorkspace({ initialNotes }: { initialNotes: NoteDTO[] }) {
   const isFullView = selectedId !== null && fullView;
 
   return (
-    <div className="flex flex-1 min-h-0 h-[calc(100vh-1px)] overflow-hidden">
+    <div className="animate-fade-in flex h-[calc(100vh-3rem)] min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
       {/* Sidebar + Grid: hidden on mobile once a note is open (Preview-only there), and hidden at every
           breakpoint while a note is in Full View, since it then takes the whole module width. */}
       <div
@@ -286,12 +286,12 @@ export function NotesWorkspace({ initialNotes }: { initialNotes: NoteDTO[] }) {
           resizes in step since it's flex-1 and this is its sibling, so no separate resize logic is needed.
           In Full View it takes the whole module width instead of the fixed 420/460px column. */}
       <div
-        className={`flex shrink-0 overflow-hidden transition-all duration-200 ease-out border-zinc-200 dark:border-zinc-800 ${
+        className={`flex shrink-0 overflow-hidden border-border transition-all duration-200 ease-out ${
           !selectedId
-            ? "w-0 opacity-0 border-l-0"
+            ? "w-0 border-l-0 opacity-0"
             : isFullView
-              ? "w-full opacity-100 border-l-0"
-              : "w-full md:w-[420px] lg:w-[460px] opacity-100 border-l"
+              ? "w-full border-l-0 opacity-100"
+              : "w-full opacity-100 md:w-[420px] md:border-l lg:w-[460px]"
         }`}
       >
         {selectedId && (

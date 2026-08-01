@@ -19,7 +19,11 @@ interface GmailApiError {
   error?: { message?: string };
 }
 
-async function getAccessToken(): Promise<string> {
+declare global {
+  var _devNexusGmailToken: { value: string; expiresAt: number } | undefined;
+}
+
+async function refreshAccessToken(): Promise<{ value: string; expiresAt: number }> {
   const clientId = await getSecret("GMAIL_CLIENT_ID");
   const clientSecret = await getSecret("GMAIL_CLIENT_SECRET");
   const refreshToken = await getSecret("GMAIL_REFRESH_TOKEN");
@@ -36,7 +40,29 @@ async function getAccessToken(): Promise<string> {
   });
   if (!res.ok) throw new Error(`Gmail token refresh failed (${res.status}): ${await res.text()}`);
   const data = await res.json();
-  return data.access_token;
+  // Google access tokens last ~1h. Expire ours a minute early so a token can't
+  // lapse mid-flight on a request that's already been authorised.
+  const ttlSeconds = typeof data.expires_in === "number" ? data.expires_in : 3600;
+  return { value: data.access_token, expiresAt: Date.now() + (ttlSeconds - 60) * 1000 };
+}
+
+/**
+ * Cached on `global` (same pattern as the Mongo client) because this used to run on
+ * *every* API call — listing 20 messages meant 21 token refreshes on top of 21 data
+ * requests, which is what made the inbox take tens of seconds to load.
+ */
+async function getAccessToken(): Promise<string> {
+  const cached = global._devNexusGmailToken;
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+
+  const fresh = await refreshAccessToken();
+  global._devNexusGmailToken = fresh;
+  return fresh.value;
+}
+
+/** Called when credentials change, so a stale token can't outlive the account it belongs to. */
+export function invalidateGmailToken(): void {
+  global._devNexusGmailToken = undefined;
 }
 
 async function gmailFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -61,44 +87,95 @@ export interface UnreadEmail {
   unread: boolean;
 }
 
-/** Runs a raw Gmail search query (`is:unread`, a free-text search term, etc.) and fetches metadata for each hit. */
+/**
+ * Runs a raw Gmail search query and fetches metadata for each hit.
+ *
+ * Gmail's list endpoint returns only ids, so a second request per message is
+ * unavoidable — but those run concurrently rather than in series. Promise.all
+ * preserves input order, so results keep Gmail's own newest-first ordering.
+ */
 async function fetchMessages(query: string, maxResults: number): Promise<UnreadEmail[]> {
   const list = await gmailFetch<{ messages?: Array<{ id: string }> }>(
     `/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`
   );
   const ids = (list.messages ?? []).map((m) => m.id);
 
-  const results: UnreadEmail[] = [];
-  for (const id of ids) {
-    const msg = await gmailFetch<{ snippet?: string; labelIds?: string[]; payload?: { headers?: GmailHeader[] } }>(
-      `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`
-    );
-    const headers = msg.payload?.headers ?? [];
-    const get = (name: string) => headers.find((h) => h.name === name)?.value ?? "";
-    results.push({
-      id,
-      from: get("From"),
-      subject: get("Subject"),
-      snippet: msg.snippet ?? "",
-      date: get("Date"),
-      unread: (msg.labelIds ?? []).includes("UNREAD"),
-    });
+  return Promise.all(
+    ids.map(async (id) => {
+      const msg = await gmailFetch<{ snippet?: string; labelIds?: string[]; payload?: { headers?: GmailHeader[] } }>(
+        `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`
+      );
+      const headers = msg.payload?.headers ?? [];
+      const get = (name: string) => headers.find((h) => h.name === name)?.value ?? "";
+      return {
+        id,
+        from: get("From"),
+        subject: get("Subject"),
+        snippet: msg.snippet ?? "",
+        date: get("Date"),
+        unread: (msg.labelIds ?? []).includes("UNREAD"),
+      };
+    })
+  );
+}
+
+export const INBOX_FILTERS = ["today-unread", "unread", "today", "all"] as const;
+export type InboxFilter = (typeof INBOX_FILTERS)[number];
+
+export function isInboxFilter(value: string): value is InboxFilter {
+  return (INBOX_FILTERS as readonly string[]).includes(value);
+}
+
+/** Start of the current local day, as Unix seconds. */
+function startOfTodayEpoch(): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+/**
+ * Builds the Gmail query for a filter.
+ *
+ * `after:` is given an epoch timestamp rather than a YYYY/MM/DD date: Gmail treats
+ * bare dates inconsistently at the day boundary (so "Today" could return nothing on
+ * the day itself), whereas an epoch second is exact. Since Dev Nexus runs locally,
+ * the server's midnight is the user's midnight.
+ *
+ * Caveat: epoch input to `after:` is long-standing but *undocumented* Gmail behaviour.
+ * If the Today filters ever start coming back empty despite mail having arrived, that
+ * is the first thing to suspect — swap to `newer_than:1d` (a rolling 24h window,
+ * documented, but not calendar-day accurate).
+ */
+function filterQuery(filter: InboxFilter): string {
+  switch (filter) {
+    case "today-unread":
+      return `in:inbox is:unread after:${startOfTodayEpoch()}`;
+    case "unread":
+      return "in:inbox is:unread";
+    case "today":
+      return `in:inbox after:${startOfTodayEpoch()}`;
+    case "all":
+      return "in:inbox";
   }
-  return results;
 }
 
 export async function listUnreadEmails(maxResults = 10): Promise<UnreadEmail[]> {
   return fetchMessages("is:unread", maxResults);
 }
 
-/** Free-text search across all mail (not just unread) — powers Global Search and the Inbox search box. */
+/** Free-text search across all mail (not just the inbox) — powers Global Search. */
 export async function searchEmails(query: string, maxResults = 5): Promise<UnreadEmail[]> {
   return fetchMessages(query, maxResults);
 }
 
-/** Default inbox listing (most recent first) when there's no search term. */
-export async function listInbox(maxResults = 20): Promise<UnreadEmail[]> {
-  return fetchMessages("in:inbox", maxResults);
+/**
+ * The Inbox view's listing. A free-text term is scoped *within* the active filter,
+ * so the chips behave like filters rather than being silently overridden by search.
+ */
+export async function listInbox(filter: InboxFilter = "all", search = "", maxResults = 25): Promise<UnreadEmail[]> {
+  const term = search.trim();
+  const query = term ? `${filterQuery(filter)} ${term}` : filterQuery(filter);
+  return fetchMessages(query, maxResults);
 }
 
 /** True unread total (not capped by a maxResults page) — powers the Dashboard widget's headline stat. */

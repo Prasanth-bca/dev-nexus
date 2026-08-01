@@ -1,11 +1,19 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 interface ConfirmAction {
   label: string;
   tone?: "primary" | "danger" | "default";
   onClick: () => void;
 }
 
+/**
+ * Notes-local because it takes an arbitrary action list — the unsaved-changes prompt
+ * needs three (Save / Discard / Cancel), which the shared two-action
+ * `@/components/confirm-dialog` deliberately doesn't model.
+ */
 export function ConfirmDialog({
   open,
   title,
@@ -19,39 +27,26 @@ export function ConfirmDialog({
   actions: ConfirmAction[];
   onDismiss: () => void;
 }) {
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
-      onClick={onDismiss}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm mx-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-lg"
-      >
-        <h2 className="text-sm font-semibold mb-1">{title}</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">{description}</p>
-        <div className="flex justify-end gap-2">
+    <Dialog open={open} onOpenChange={(next) => !next && onDismiss()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
           {actions.map((action) => (
-            <button
+            <Button
               key={action.label}
               type="button"
               onClick={action.onClick}
-              className={
-                "text-sm px-3 py-1.5 rounded-md " +
-                (action.tone === "primary"
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : action.tone === "danger"
-                    ? "bg-red-600 text-white"
-                    : "border border-zinc-200 dark:border-zinc-800")
-              }
+              variant={action.tone === "primary" ? "default" : action.tone === "danger" ? "destructive" : "outline"}
             >
               {action.label}
-            </button>
+            </Button>
           ))}
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

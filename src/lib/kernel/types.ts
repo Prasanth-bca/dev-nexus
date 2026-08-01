@@ -23,6 +23,10 @@ export interface ModuleManifest {
   category: string;
   icon?: string;
   version: string;
+  /** One-sentence summary of what this module does — surfaced on the About page. */
+  description?: string;
+  /** Notable capabilities, in the module's own words. Rendered as bullets on the About page. */
+  highlights?: string[];
   navEntry?: { label: string; path: string };
   requiredSecrets?: string[];
   /** Documented, not enforced — a hint for what this module publishes on the event bus. */

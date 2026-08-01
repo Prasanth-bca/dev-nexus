@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Download, Maximize2, Minimize2, Pencil, Pin, Star, Trash2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { CATEGORIES, TEMPLATES } from "../constants";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestButton } from "./SuggestButton";
 import { SummaryPanel } from "./SummaryPanel";
 import { RelatedNotesPanel } from "./RelatedNotesPanel";
+
+const ACCENT = "var(--module-notes)";
 
 export interface NoteDraft {
   title: string;
@@ -27,12 +32,20 @@ function TagsInput({ tags, onChange }: { tags: string[]; onChange: (tags: string
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 border border-zinc-200 dark:border-zinc-800 rounded-md px-2 py-1">
+    <div className="focus-glow flex flex-wrap items-center gap-1.5 rounded-lg border border-input bg-foreground/[0.03] px-2 py-1 transition-all duration-200 dark:bg-white/[0.04]">
       {tags.map((tag) => (
-        <span key={tag} className="flex items-center gap-1 text-xs bg-zinc-100 dark:bg-zinc-800 rounded px-1.5 py-0.5">
+        <span
+          key={tag}
+          className="flex items-center gap-1 rounded-full bg-foreground/[0.06] px-2 py-0.5 text-xs dark:bg-white/[0.08]"
+        >
           #{tag}
-          <button type="button" onClick={() => onChange(tags.filter((t) => t !== tag))} className="text-zinc-400 hover:text-zinc-700">
-            ×
+          <button
+            type="button"
+            aria-label={`Remove tag ${tag}`}
+            onClick={() => onChange(tags.filter((t) => t !== tag))}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
           </button>
         </span>
       ))}
@@ -47,7 +60,8 @@ function TagsInput({ tags, onChange }: { tags: string[]; onChange: (tags: string
         }}
         onBlur={commit}
         placeholder={tags.length === 0 ? "Add tags…" : ""}
-        className="flex-1 min-w-[80px] text-sm outline-none bg-transparent"
+        aria-label="Add a tag"
+        className="min-w-[80px] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
       />
     </div>
   );
@@ -61,12 +75,6 @@ function downloadMarkdown(title: string, content: string) {
   a.download = `${title.trim().replace(/[^a-z0-9-_ ]/gi, "").replace(/\s+/g, "-").toLowerCase() || "note"}.md`;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-function iconButtonClass(active: boolean) {
-  return `text-sm px-2 py-1.5 rounded-md border transition-colors ${
-    active ? "border-zinc-900 dark:border-zinc-100" : "border-zinc-200 dark:border-zinc-800 opacity-50 hover:opacity-100"
-  }`;
 }
 
 export function NoteDetail({
@@ -108,27 +116,32 @@ export function NoteDetail({
   const showTemplates = isNew && isEditing && !draft.content;
 
   return (
-    <div className="flex-1 min-w-0 flex flex-col p-4 gap-3 animate-fade-in">
+    <div
+      style={{ "--accent": ACCENT } as React.CSSProperties}
+      className="animate-fade-in flex min-w-0 flex-1 flex-col gap-3 p-4"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex-1 min-w-[200px]">
+        <div className="min-w-[200px] flex-1">
           {isEditing ? (
             <input
               value={draft.title}
               onChange={(e) => onChange({ title: e.target.value })}
               placeholder="Note title"
+              aria-label="Note title"
               autoFocus
-              className="w-full text-lg font-semibold outline-none bg-transparent"
+              className="w-full bg-transparent text-lg font-semibold tracking-tight outline-none placeholder:text-muted-foreground"
             />
           ) : (
-            <h1 className="text-lg font-semibold truncate">{draft.title || "Untitled"}</h1>
+            <h1 className="truncate text-lg font-semibold tracking-tight">{draft.title || "Untitled"}</h1>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {isEditing ? (
               <select
                 value={draft.category}
                 onChange={(e) => onChange({ category: e.target.value })}
-                className="text-xs border border-zinc-200 dark:border-zinc-800 rounded-md px-2 py-1 bg-transparent"
+                aria-label="Note category"
+                className="rounded-lg border border-input bg-foreground/[0.03] px-2 py-1 text-xs outline-none transition-all focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 dark:bg-white/[0.04]"
               >
                 <option value="">No category</option>
                 {CATEGORIES.map((c) => (
@@ -139,7 +152,7 @@ export function NoteDetail({
               </select>
             ) : (
               draft.category && (
-                <span className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                <span className="rounded-full border border-[color-mix(in_srgb,var(--accent)_22%,transparent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] px-2 py-0.5 text-[11px] font-medium text-[var(--accent)]">
                   {draft.category}
                 </span>
               )
@@ -149,7 +162,10 @@ export function NoteDetail({
               <TagsInput tags={draft.tags} onChange={(tags) => onChange({ tags })} />
             ) : (
               draft.tags.map((tag) => (
-                <span key={tag} className="text-[11px] text-zinc-400">
+                <span
+                  key={tag}
+                  className="rounded-full bg-foreground/[0.05] px-2 py-0.5 text-[11px] text-muted-foreground dark:bg-white/[0.06]"
+                >
                   #{tag}
                 </span>
               ))
@@ -161,97 +177,113 @@ export function NoteDetail({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button type="button" onClick={() => onChange({ pinned: !draft.pinned })} title="Pin" className={iconButtonClass(draft.pinned)}>
-            📌
-          </button>
-          <button
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
             type="button"
-            onClick={() => onChange({ favorite: !draft.favorite })}
-            title="Favorite"
-            className={iconButtonClass(draft.favorite)}
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onChange({ pinned: !draft.pinned })}
+            aria-label={draft.pinned ? "Unpin note" : "Pin note"}
+            aria-pressed={draft.pinned}
+            className={cn(draft.pinned ? "text-[var(--accent)]" : "text-muted-foreground")}
           >
-            ⭐
-          </button>
+            <Pin className={cn("h-4 w-4", draft.pinned && "fill-current")} />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onChange({ favorite: !draft.favorite })}
+            aria-label={draft.favorite ? "Remove from favorites" : "Add to favorites"}
+            aria-pressed={draft.favorite}
+            className={cn(draft.favorite ? "text-[var(--accent)]" : "text-muted-foreground")}
+          >
+            <Star className={cn("h-4 w-4", draft.favorite && "fill-current")} />
+          </Button>
 
-          <span className="w-px self-stretch bg-zinc-200 dark:bg-zinc-800 mx-1" />
+          <span aria-hidden className="mx-1 h-5 w-px self-center bg-border" />
 
           {isEditing ? (
-            <button
+            <Button
               type="button"
+              size="sm"
               onClick={onSave}
               disabled={saving || !draft.title.trim()}
               title={!draft.title.trim() ? "Add a title before saving" : "Save (Ctrl+S)"}
-              className="text-sm px-3 py-1.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="gap-1.5"
             >
-              {saving ? "Saving…" : "💾 Save"}
-            </button>
+              <Check className="h-3.5 w-3.5" />
+              {saving ? "Saving…" : "Save"}
+            </Button>
           ) : (
-            <button
-              type="button"
-              onClick={onEnterEdit}
-              title="Edit (Ctrl+E)"
-              className="text-sm px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-            >
-              ✏ Edit
-            </button>
+            <Button type="button" variant="outline" size="sm" onClick={onEnterEdit} title="Edit (Ctrl+E)" className="gap-1.5">
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Button>
           )}
 
           {!isNew && (
             <>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => downloadMarkdown(draft.title, draft.content)}
+                aria-label="Export as Markdown"
                 title="Export"
-                className="text-sm px-2 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                className="text-muted-foreground"
               >
-                ⬇
-              </button>
-              <button
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={onRequestDelete}
+                aria-label="Delete note"
                 title="Delete"
-                className="text-sm px-2 py-1.5 rounded-md border border-red-200 text-red-600 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
-                🗑
-              </button>
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </>
           )}
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onToggleFullView}
+            aria-label={fullView ? "Exit full view" : "Enter full view"}
             title={fullView ? "Exit Full View" : "Full View"}
-            className="text-sm px-2 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+            className="text-muted-foreground"
           >
-            {fullView ? "🗗" : "⛶"}
-          </button>
+            {fullView ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
+            aria-label="Close note"
             title="Close (Esc)"
-            className="text-sm px-2 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            className="text-muted-foreground"
           >
-            ✕
-          </button>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      {isEditing && !draft.title.trim() && <span className="text-xs text-amber-600 dark:text-amber-500">Add a title to save</span>}
+      {isEditing && !draft.title.trim() && <span className="text-xs text-warning">Add a title to save</span>}
 
       {showTemplates && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-400">Start from:</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Start from:</span>
           {TEMPLATES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => onChange({ content: t.content })}
-              className="text-xs px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-            >
+            <Button key={t.id} type="button" variant="outline" size="xs" onClick={() => onChange({ content: t.content })}>
               {t.name}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -259,7 +291,7 @@ export function NoteDetail({
       {isEditing ? (
         <MarkdownEditor value={draft.content} onChange={(content) => onChange({ content })} />
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
           {noteId && (
             <SummaryPanel
               noteId={noteId}

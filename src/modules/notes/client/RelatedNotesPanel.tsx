@@ -30,17 +30,18 @@ export function RelatedNotesPanel({ noteId, onOpenNote }: { noteId: string; onOp
 
   return (
     <div>
-      <div className="flex items-center gap-1.5 mb-1.5 text-xs font-medium text-muted-foreground">
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Link2 className="h-3.5 w-3.5" />
         Related Notes
       </div>
-      <div className="flex flex-col gap-1">
-        {related.map((n) => (
+      <div className="stagger flex flex-col gap-1">
+        {related.map((n, i) => (
           <button
             key={n.id}
             type="button"
             onClick={() => onOpenNote(n.id)}
-            className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs hover:bg-muted/50"
+            style={{ "--i": i } as React.CSSProperties}
+            className="flex items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-2 text-left text-xs transition-all duration-200 hover:translate-x-0.5 hover:border-[color-mix(in_srgb,var(--module-notes)_30%,transparent)] hover:bg-foreground/[0.04] dark:hover:bg-white/[0.05]"
           >
             <span className="truncate">{n.title || "Untitled"}</span>
             {n.category && (

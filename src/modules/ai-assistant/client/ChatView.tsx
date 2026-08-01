@@ -2,6 +2,15 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import { AlertCircle, Check, MessageSquare, Pencil, Plug, Plus, Send, ShieldAlert, Sparkles, Trash2, Wrench, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/empty-state";
+import { getModuleAccent } from "@/lib/icon-map";
+import { cn } from "@/lib/utils";
+
+const ACCENT = getModuleAccent("ai-assistant");
 
 interface Message {
   role: "user" | "assistant" | "assistant_tool_call" | "tool_result";
@@ -31,26 +40,87 @@ function pendingFromMessages(messages: Message[]): PendingConfirmation | null {
   return null;
 }
 
+/** Accent-tinted identity chip that anchors every assistant-side row in the transcript. */
+function AssistantAvatar() {
+  return (
+    <div
+      aria-hidden
+      className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]"
+    >
+      <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+    </div>
+  );
+}
+
 function MessageBubble({ message }: { message: Message }) {
   if (message.role === "assistant_tool_call") {
+    // Tool activity reads as a machine action, not prose — give it its own bordered
+    // card so it never gets mistaken for something the assistant "said".
+    const args = message.toolArguments && Object.keys(message.toolArguments).length > 0 ? JSON.stringify(message.toolArguments, null, 2) : null;
     return (
-      <div className="self-start text-xs text-zinc-400 italic">
-        🔧 {message.toolName}({JSON.stringify(message.toolArguments)})
+      <div className="animate-fade-in-up flex w-full items-start gap-2.5">
+        <div aria-hidden className="w-7 shrink-0" />
+        <div className="min-w-0 max-w-[65ch] flex-1 rounded-xl border border-border bg-foreground/[0.04] px-3 py-2.5 dark:bg-white/[0.05]">
+          <div className="flex items-center gap-2">
+            <Wrench className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate font-mono text-xs font-medium">{message.toolName}</span>
+            <span className="ml-auto shrink-0 text-[11px] tracking-wide text-muted-foreground uppercase">Tool call</span>
+          </div>
+          {args && (
+            <details className="group/args mt-2">
+              <summary className="cursor-pointer list-none text-[11px] text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
+                <span className="group-open/args:hidden">Show arguments</span>
+                <span className="hidden group-open/args:inline">Hide arguments</span>
+              </summary>
+              <pre className="mt-1.5 overflow-x-auto rounded-lg bg-background/60 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                {args}
+              </pre>
+            </details>
+          )}
+        </div>
       </div>
     );
   }
   if (message.role === "tool_result") {
     return null; // keep raw tool output out of the transcript — the call above and final answer below are enough
   }
+  if (message.role === "user") {
+    return (
+      <div className="animate-fade-in-up flex w-full justify-end">
+        <div className="max-w-[min(85%,52ch)] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--accent)_22%,transparent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
+          {message.content}
+        </div>
+      </div>
+    );
+  }
   return (
-    <div
-      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-        message.role === "user"
-          ? "self-end bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-          : "self-start bg-zinc-100 dark:bg-zinc-900"
-      }`}
-    >
-      {message.content}
+    <div className="animate-fade-in-up flex w-full items-start gap-2.5">
+      <AssistantAvatar />
+      <div className="min-w-0 max-w-[65ch] rounded-2xl rounded-bl-md border border-border bg-card px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
+        {message.content}
+      </div>
+    </div>
+  );
+}
+
+/** Three-dot pulse shown while the model is composing a reply. */
+function TypingIndicator() {
+  return (
+    <div className="animate-fade-in flex w-full items-start gap-2.5">
+      <AssistantAvatar />
+      <div
+        role="status"
+        aria-label="Assistant is thinking"
+        className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3.5"
+      >
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="h-1.5 w-1.5 rounded-full bg-muted-foreground"
+            style={{ animation: "pulse-dot 1.2s ease-in-out infinite", animationDelay: `${i * 160}ms` }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -242,150 +312,218 @@ export function ChatView({
 
   if (!hasActiveProvider) {
     return (
-      <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm">
-        <p className="font-medium mb-1">No AI provider configured</p>
-        <p className="text-zinc-600 dark:text-zinc-400 mb-3">
-          Add an API key for Claude, GPT, Groq, or a custom endpoint to start chatting.
-        </p>
-        <button
-          type="button"
-          onClick={onNeedProviders}
-          className="text-xs px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800"
-        >
-          Configure a provider
-        </button>
-      </div>
+      <EmptyState
+        accent={ACCENT}
+        icon={Plug}
+        title="No AI provider configured"
+        description="Add an API key for Claude, GPT, Groq, or a custom endpoint to start chatting."
+        action={
+          <Button type="button" onClick={onNeedProviders}>
+            Configure a provider
+          </Button>
+        }
+      />
     );
   }
 
   return (
-    <div className="flex flex-1 min-h-0 gap-3">
-      <div className="w-56 shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col gap-1 pr-2 overflow-y-auto">
-        <button
-          type="button"
-          onClick={newConversation}
-          className="text-sm rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium py-1.5 mb-1"
-        >
-          + New Chat
-        </button>
-        {conversations.map((c) =>
-          editingId === c.id ? (
-            <input
-              key={c.id}
-              autoFocus
-              value={editingTitle}
-              onChange={(e) => setEditingTitle(e.target.value)}
-              onBlur={commitRename}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commitRename();
-                } else if (e.key === "Escape") {
-                  setEditingId(null);
-                }
-              }}
-              className="px-2 py-1.5 rounded-md text-xs bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 outline-none"
-            />
-          ) : (
-            <div
-              key={c.id}
-              onClick={() => openConversation(c.id)}
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                startRename(c);
-              }}
-              className={`group flex items-center justify-between gap-1 px-2 py-1.5 rounded-md text-xs cursor-pointer ${
-                activeId === c.id ? "bg-zinc-100 dark:bg-zinc-900" : "hover:bg-zinc-50 dark:hover:bg-zinc-900"
-              }`}
-            >
-              <span className="truncate">{c.title}</span>
-              <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 shrink-0">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startRename(c);
-                  }}
-                  title="Rename"
-                  className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-                >
-                  ✎
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConversation(c.id);
-                  }}
-                  title="Delete"
-                  className="text-zinc-400 hover:text-red-600"
-                >
-                  ×
-                </button>
-              </span>
-            </div>
-          )
-        )}
-      </div>
+    <div style={{ "--accent": ACCENT } as React.CSSProperties} className="flex flex-1 min-h-0 gap-3 md:gap-4">
+      {/* Conversation rail — a floating glass panel, so blur is fair game here. */}
+      <aside
+        aria-label="Conversations"
+        className="glass flex w-48 shrink-0 flex-col gap-2 overflow-y-auto rounded-xl p-2 sm:w-56 lg:w-64"
+      >
+        <Button type="button" onClick={newConversation} className="h-11 w-full justify-center gap-1.5 md:h-9">
+          <Plus />
+          New chat
+        </Button>
+
+        <div className="stagger flex flex-col gap-0.5">
+          {conversations.map((c, i) =>
+            editingId === c.id ? (
+              <Input
+                key={c.id}
+                autoFocus
+                aria-label="Conversation title"
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitRename();
+                  } else if (e.key === "Escape") {
+                    setEditingId(null);
+                  }
+                }}
+                className="h-9 text-xs md:text-xs"
+                style={{ "--i": i } as React.CSSProperties}
+              />
+            ) : (
+              <div
+                key={c.id}
+                onClick={() => openConversation(c.id)}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  startRename(c);
+                }}
+                style={{ "--i": i } as React.CSSProperties}
+                className={cn(
+                  "group relative flex min-h-11 cursor-pointer items-center gap-1 rounded-lg py-1.5 pr-1 pl-3 text-xs transition-colors md:min-h-9",
+                  activeId === c.id
+                    ? "bg-foreground/[0.06] text-foreground dark:bg-white/[0.08]"
+                    : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground dark:hover:bg-white/[0.05]"
+                )}
+              >
+                {activeId === c.id && (
+                  <span
+                    aria-hidden
+                    className="absolute top-1/2 left-0.5 h-4 w-[3px] -translate-y-1/2 rounded-full bg-[var(--accent)]"
+                  />
+                )}
+                <span className="flex-1 truncate">{c.title}</span>
+                {/* Always visible on touch (no hover there); hover-revealed from md up. */}
+                <span className="flex shrink-0 items-center transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Rename ${c.title}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startRename(c);
+                    }}
+                    className="h-9 w-9 text-muted-foreground hover:text-foreground md:h-7 md:w-7"
+                  >
+                    <Pencil />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Delete ${c.title}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteConversation(c.id);
+                    }}
+                    className="h-9 w-9 text-muted-foreground hover:bg-destructive/10 hover:text-destructive md:h-7 md:w-7"
+                  >
+                    <Trash2 />
+                  </Button>
+                </span>
+              </div>
+            )
+          )}
+          {conversations.length === 0 && <p className="px-2 py-3 text-xs text-muted-foreground">No conversations yet.</p>}
+        </div>
+      </aside>
 
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 mb-3 pr-1">
-          {messages.length === 0 && !loadingConvo && (
-            <p className="text-sm text-zinc-400">Ask anything — it can search, create, update, and delete your notes.</p>
-          )}
-          {messages.map((m, i) => (
-            <MessageBubble key={i} message={m} />
-          ))}
-          {sending && !pending && <div className="self-start text-sm text-zinc-400">Thinking…</div>}
-          <div ref={bottomRef} />
+        {/* Transcript is a reading surface — solid bubbles, never blurred. */}
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 pb-4">
+            {messages.length === 0 && !loadingConvo && (
+              <EmptyState
+                accent={ACCENT}
+                icon={MessageSquare}
+                title="Ask anything"
+                description="It can search, create, update, and delete your notes."
+              />
+            )}
+            {/* Only on a cold open — while switching conversations the previous transcript stays put. */}
+            {loadingConvo && messages.length === 0 && (
+              <div className="flex flex-col gap-4">
+                <Skeleton className="h-14 w-2/3 self-end rounded-2xl" />
+                <Skeleton className="h-20 w-4/5 rounded-2xl" />
+                <Skeleton className="h-14 w-1/2 rounded-2xl" />
+              </div>
+            )}
+            {messages.map((m, i) => (
+              <MessageBubble key={i} message={m} />
+            ))}
+            {sending && !pending && <TypingIndicator />}
+            <div ref={bottomRef} />
+          </div>
         </div>
 
-        {pending && (
-          <div className="mb-3 rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 p-3 text-sm">
-            <p className="font-medium mb-1">Confirm action</p>
-            <p className="text-zinc-600 dark:text-zinc-400 mb-2">
-              Run <code className="text-xs font-mono">{pending.name}</code>
-              <code className="text-xs font-mono">({JSON.stringify(pending.arguments)})</code>?
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => respondToConfirmation(true)}
-                disabled={sending}
-                className="text-xs px-3 py-1.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 disabled:opacity-50"
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => respondToConfirmation(false)}
-                disabled={sending}
-                className="text-xs px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 disabled:opacity-50"
-              >
-                Deny
-              </button>
+        <div className="mx-auto flex w-full max-w-3xl shrink-0 flex-col gap-3">
+          {pending && (
+            <div className="animate-fade-in-up rounded-xl border border-[color-mix(in_srgb,var(--accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] p-4 shadow-[var(--glass-shadow)]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]">
+                  <ShieldAlert className="h-4 w-4 text-[var(--accent)]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">Approval required</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    The assistant wants to run <code className="font-mono text-foreground">{pending.name}</code>. Nothing runs
+                    until you approve.
+                  </p>
+                  <pre className="mt-2 max-h-32 overflow-auto rounded-lg border border-border bg-background/60 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    {JSON.stringify(pending.arguments, null, 2)}
+                  </pre>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="lg"
+                      onClick={() => respondToConfirmation(true)}
+                      disabled={sending}
+                      className="h-11 px-4 md:h-9"
+                    >
+                      <Check />
+                      Approve
+                    </Button>
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="destructive"
+                      onClick={() => respondToConfirmation(false)}
+                      disabled={sending}
+                      className="h-11 px-4 md:h-9"
+                    >
+                      <X />
+                      Deny
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
+          {error && (
+            <p className="flex items-center gap-2 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              {error}
+            </p>
+          )}
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={pending ? "Resolve the pending action above first…" : "Message the assistant…"}
-            disabled={!!pending}
-            className="flex-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-400 disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={sending || !input.trim() || !!pending}
-            className="text-sm px-4 py-2 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 disabled:opacity-50"
-          >
-            Send
-          </button>
-        </form>
+          {/* Floating composer — the one blurred surface in the chat column. */}
+          <form onSubmit={handleSubmit}>
+            <div
+              className={cn(
+                "glass focus-glow flex items-center gap-2 rounded-2xl p-2 transition-[border-color,box-shadow] duration-200",
+                pending && "opacity-60"
+              )}
+            >
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={pending ? "Resolve the pending action above first…" : "Message the assistant…"}
+                disabled={!!pending}
+                aria-label="Message the assistant"
+                className="h-11 flex-1 border-0 bg-transparent px-3 text-sm shadow-none focus-visible:border-0 focus-visible:ring-0 disabled:bg-transparent md:text-sm dark:bg-transparent dark:disabled:bg-transparent"
+              />
+              <Button
+                type="submit"
+                aria-label="Send message"
+                disabled={sending || !input.trim() || !!pending}
+                className="h-11 w-11 shrink-0 rounded-xl md:h-9 md:w-9"
+              >
+                <Send />
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

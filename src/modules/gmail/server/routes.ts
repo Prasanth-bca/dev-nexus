@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import type { ModuleContext } from "@/lib/kernel/context";
 import type { RouteDefinition } from "@/lib/kernel/types";
 import { setSecret, deleteSecret } from "@/lib/kernel/secrets";
-import { addLabelToEmail, getEmail, listInbox, markEmailAsRead, searchEmails } from "@/lib/integrations/gmail";
+import { addLabelToEmail, getEmail, invalidateGmailToken, isInboxFilter, listInbox, markEmailAsRead } from "@/lib/integrations/gmail";
 import { buildAuthUrl, exchangeCodeForTokens } from "./google";
 
 const STATE_COOKIE = "gmail_oauth_state";
@@ -47,6 +47,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         }
         await setSecret("GMAIL_CLIENT_ID", clientId);
         await setSecret("GMAIL_CLIENT_SECRET", clientSecret);
+        invalidateGmailToken();
         return Response.json({ ok: true });
       },
     },
@@ -110,6 +111,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
           }
 
           await setSecret("GMAIL_REFRESH_TOKEN", tokens.refreshToken);
+          invalidateGmailToken();
           ctx.events.emit("gmail.connected", {});
           return redirectTo("connected");
         } catch (err) {
@@ -122,6 +124,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       path: "/disconnect",
       handler: async () => {
         await deleteSecret("GMAIL_REFRESH_TOKEN");
+        invalidateGmailToken();
         ctx.events.emit("gmail.disconnected", {});
         return Response.json({ ok: true });
       },
@@ -130,10 +133,12 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       method: "GET",
       path: "/messages",
       handler: async (req) => {
-        const q = new URL(req.url).searchParams.get("q")?.trim();
+        const params = new URL(req.url).searchParams;
+        const q = params.get("q")?.trim() ?? "";
+        const rawFilter = params.get("filter") ?? "";
+        const filter = isInboxFilter(rawFilter) ? rawFilter : "today-unread";
         try {
-          const messages = q ? await searchEmails(q, 20) : await listInbox(20);
-          return Response.json(messages);
+          return Response.json(await listInbox(filter, q));
         } catch (err) {
           return Response.json({ error: err instanceof Error ? err.message : "Could not load messages." }, { status: 502 });
         }

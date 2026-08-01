@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { ModuleContext } from "@/lib/kernel/context";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { GithubView } from "./GithubView";
 
 export async function GithubPage({ ctx }: { ctx: ModuleContext }) {
@@ -12,7 +13,7 @@ export async function GithubPage({ ctx }: { ctx: ModuleContext }) {
   }
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton variant="split" />}>
       <GithubView initialConnected={connected} />
     </Suspense>
   );

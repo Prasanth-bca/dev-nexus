@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import type { ModuleContext } from "@/lib/kernel/context";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { GmailView } from "./GmailView";
 
 export async function GmailPage({ ctx }: { ctx: ModuleContext }) {
@@ -28,7 +29,7 @@ export async function GmailPage({ ctx }: { ctx: ModuleContext }) {
   const redirectUri = `${proto}://${host}/api/modules/gmail/oauth/callback`;
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<PageSkeleton variant="split" />}>
       <GmailView initialConfigured={configured} initialConnected={connected} redirectUri={redirectUri} />
     </Suspense>
   );
