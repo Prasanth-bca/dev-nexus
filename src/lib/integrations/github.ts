@@ -26,13 +26,32 @@ async function githubFetch<T>(path: string): Promise<T> {
   return res.json();
 }
 
-/** Verifies a token the user just typed in (not yet saved) before persisting it — mirrors how Gmail validates OAuth tokens on exchange. */
-export async function verifyToken(token: string): Promise<{ login: string }> {
+/**
+ * Verifies a token the user just typed in (not yet saved) before persisting it — mirrors how
+ * Gmail validates OAuth tokens on exchange.
+ *
+ * Also surfaces the token's granted scopes, read off the `X-OAuth-Scopes` response header.
+ * That header is only ever set for *classic* PATs — fine-grained PATs don't use OAuth scopes
+ * at all (their access is repo-by-repo, configured when the token was created), so `scopes`
+ * comes back empty for those. Both are legitimate; this just can't describe a fine-grained
+ * token's access as a scope list because GitHub doesn't expose one.
+ */
+export async function verifyToken(token: string): Promise<{ login: string; scopes: string[] }> {
   const res = await fetch(`${API_BASE}/user`, { headers: { ...API_HEADERS, Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(res.status === 401 ? "Invalid GitHub token." : `GitHub API error (${res.status}).`);
   const data = await res.json();
-  return { login: data.login };
+  const scopesHeader = res.headers.get("x-oauth-scopes");
+  const scopes = scopesHeader
+    ? scopesHeader
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+  return { login: data.login, scopes };
 }
+
+export type RepoRelationship = "owner" | "collaborator" | "organization";
+export type RepoPermission = "admin" | "maintain" | "write" | "triage" | "read" | null;
 
 export interface RepoSummary {
   id: number;
@@ -43,6 +62,18 @@ export interface RepoSummary {
   language: string | null;
   updatedAt: string;
   htmlUrl: string;
+  ownerLogin: string;
+  ownerType: "User" | "Organization";
+  /**
+   * Why this repo shows up at all, derived (not returned directly by GitHub) by comparing
+   * the repo's owner to the authenticated user: "owner" if it's the viewer's own account,
+   * "organization" if the owner is an org, otherwise "collaborator" (added to someone else's
+   * personal repo). This is exactly the distinction GitHub's own permission model draws —
+   * `/user/repos` defaults to returning repos from all three affiliations at once.
+   */
+  relationship: RepoRelationship;
+  /** The viewer's own access level on this specific repo, highest-privilege label first. Only present when GitHub includes a `permissions` object on the repo (it does for authenticated list/get calls). */
+  permission: RepoPermission;
 }
 
 interface GithubApiRepo {
@@ -54,9 +85,27 @@ interface GithubApiRepo {
   language: string | null;
   updated_at: string;
   html_url: string;
+  owner: { login: string; type: string };
+  permissions?: { admin?: boolean; maintain?: boolean; push?: boolean; triage?: boolean; pull?: boolean };
 }
 
-function toRepoSummary(r: GithubApiRepo): RepoSummary {
+function derivePermission(p: GithubApiRepo["permissions"]): RepoPermission {
+  if (!p) return null;
+  if (p.admin) return "admin";
+  if (p.maintain) return "maintain";
+  if (p.push) return "write";
+  if (p.triage) return "triage";
+  if (p.pull) return "read";
+  return null;
+}
+
+function toRepoSummary(r: GithubApiRepo, viewerLogin: string): RepoSummary {
+  const relationship: RepoRelationship =
+    r.owner.login.toLowerCase() === viewerLogin.toLowerCase()
+      ? "owner"
+      : r.owner.type === "Organization"
+        ? "organization"
+        : "collaborator";
   return {
     id: r.id,
     fullName: r.full_name,
@@ -66,17 +115,38 @@ function toRepoSummary(r: GithubApiRepo): RepoSummary {
     language: r.language,
     updatedAt: r.updated_at,
     htmlUrl: r.html_url,
+    ownerLogin: r.owner.login,
+    ownerType: r.owner.type === "Organization" ? "Organization" : "User",
+    relationship,
+    permission: derivePermission(r.permissions),
   };
 }
 
-/** Most-recently-updated first. Capped at `maxResults` — fine for a personal account's dashboard/search use, not a full paginated browser. */
+/**
+ * Most-recently-updated first. Capped at `maxResults` — fine for a personal account's
+ * dashboard/search use, not a full paginated browser.
+ *
+ * Hits `GET /user/repos` with no `affiliation`/`visibility` filter, which is *why* private
+ * and collaborator/org repos show up: that's GitHub's documented default for this endpoint —
+ * it returns the union of repos you own, repos you collaborate on, and repos belonging to any
+ * organization you belong to, public and private alike (private ones included only because the
+ * token itself has read access to them). Filtering to a subset happens client-side against
+ * `relationship`/`private` below, rather than making a separate API call per filter.
+ */
 export async function listRepos(maxResults = 100): Promise<RepoSummary[]> {
-  const repos = await githubFetch<GithubApiRepo[]>(`/user/repos?sort=updated&per_page=${maxResults}`);
-  return repos.map(toRepoSummary);
+  const [repos, viewer] = await Promise.all([
+    githubFetch<GithubApiRepo[]>(`/user/repos?sort=updated&per_page=${maxResults}`),
+    githubFetch<{ login: string }>("/user"),
+  ]);
+  return repos.map((r) => toRepoSummary(r, viewer.login));
 }
 
 export async function getRepo(owner: string, repo: string): Promise<RepoSummary> {
-  return toRepoSummary(await githubFetch<GithubApiRepo>(`/repos/${owner}/${repo}`));
+  const [data, viewer] = await Promise.all([
+    githubFetch<GithubApiRepo>(`/repos/${owner}/${repo}`),
+    githubFetch<{ login: string }>("/user"),
+  ]);
+  return toRepoSummary(data, viewer.login);
 }
 
 export interface Branch {

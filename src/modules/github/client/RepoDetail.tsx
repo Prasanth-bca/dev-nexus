@@ -20,7 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { getModuleAccent } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
-import type { Branch, Commit, Issue, PullRequest } from "./types";
+import { PermissionBadge, RelationshipBadge, VisibilityBadge } from "./RepoBadges";
+import type { Branch, Commit, Issue, PullRequest, RepoSummary } from "./types";
 
 const ACCENT = getModuleAccent("github");
 
@@ -68,7 +69,16 @@ function StatePill({ tone, children }: { tone: keyof typeof STATE_TONE; children
 const ROW =
   "group flex items-center justify-between gap-3 rounded-lg border border-transparent px-2.5 py-2 text-sm transition-[background-color,border-color,transform] duration-200 hover:translate-x-0.5 hover:border-border hover:bg-foreground/[0.04] dark:hover:bg-white/[0.05]";
 
-export function RepoDetail({ fullName, onClose }: { fullName: string | null; onClose: () => void }) {
+export function RepoDetail({
+  fullName,
+  repo,
+  onClose,
+}: {
+  fullName: string | null;
+  /** The full repo object from the list, when it's loaded — powers the visibility/relationship/permission badges. Absent transiently while the list is still loading, even if `fullName` is already set (e.g. a deep link). */
+  repo: RepoSummary | null;
+  onClose: () => void;
+}) {
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -105,32 +115,47 @@ export function RepoDetail({ fullName, onClose }: { fullName: string | null; onC
 
   return (
     <div className="animate-fade-in flex flex-1 min-h-0 flex-col" style={{ "--accent": ACCENT } as React.CSSProperties}>
-      <div className="flex items-center justify-between gap-2 border-b border-border p-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Back to repository list"
-            className="h-11 w-11 shrink-0 md:hidden"
-            onClick={onClose}
+      <div className="flex flex-col gap-2.5 border-b border-border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Back to repository list"
+              className="h-11 w-11 shrink-0 md:hidden"
+              onClick={onClose}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]">
+              <FolderGit2 className="h-3.5 w-3.5 text-[var(--accent)]" aria-hidden />
+            </span>
+            <span className="truncate text-sm font-medium">{fullName}</span>
+          </div>
+          <a
+            href={`https://github.com/${fullName}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Open ${fullName} on GitHub`}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-foreground/[0.04] hover:text-foreground md:h-8 md:w-8 dark:hover:bg-white/[0.05]"
           >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[color-mix(in_srgb,var(--accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]">
-            <FolderGit2 className="h-3.5 w-3.5 text-[var(--accent)]" aria-hidden />
-          </span>
-          <span className="truncate text-sm font-medium">{fullName}</span>
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </div>
-        <a
-          href={`https://github.com/${fullName}`}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Open ${fullName} on GitHub`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-foreground/[0.04] hover:text-foreground md:h-8 md:w-8 dark:hover:bg-white/[0.05]"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </a>
+
+        {/* Why this repo is visible at all, and what you can do with it — the direct
+            on-screen answer, not something you have to infer or go check GitHub for. */}
+        {repo && (
+          <>
+            <div className="flex flex-wrap items-center gap-1.5 pl-9">
+              <VisibilityBadge isPrivate={repo.private} />
+              <RelationshipBadge relationship={repo.relationship} ownerLogin={repo.ownerLogin} />
+              <PermissionBadge permission={repo.permission} />
+            </div>
+            {repo.description && <p className="pl-9 text-xs text-muted-foreground">{repo.description}</p>}
+          </>
+        )}
       </div>
 
       <Tabs defaultValue="commits" className="flex flex-1 min-h-0 flex-col p-3">

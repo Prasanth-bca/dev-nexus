@@ -1,3 +1,6 @@
+export type RepoRelationship = "owner" | "collaborator" | "organization";
+export type RepoPermission = "admin" | "maintain" | "write" | "triage" | "read" | null;
+
 export interface RepoSummary {
   id: number;
   fullName: string;
@@ -7,6 +10,10 @@ export interface RepoSummary {
   language: string | null;
   updatedAt: string;
   htmlUrl: string;
+  ownerLogin: string;
+  ownerType: "User" | "Organization";
+  relationship: RepoRelationship;
+  permission: RepoPermission;
 }
 
 export interface Branch {

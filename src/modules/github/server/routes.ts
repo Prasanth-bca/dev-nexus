@@ -11,8 +11,8 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       handler: async () => {
         try {
           const token = await ctx.secrets.get("GITHUB_TOKEN");
-          const { login } = await verifyToken(token);
-          return Response.json({ connected: true, username: login });
+          const { login, scopes } = await verifyToken(token);
+          return Response.json({ connected: true, username: login, scopes });
         } catch {
           return Response.json({ connected: false });
         }
@@ -26,10 +26,10 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const token = typeof body.token === "string" ? body.token.trim() : "";
         if (!token) return Response.json({ error: "A personal access token is required." }, { status: 400 });
         try {
-          const { login } = await verifyToken(token);
+          const { login, scopes } = await verifyToken(token);
           await setSecret("GITHUB_TOKEN", token);
           ctx.events.emit("github.connected", {});
-          return Response.json({ ok: true, username: login });
+          return Response.json({ ok: true, username: login, scopes });
         } catch (err) {
           return Response.json({ error: err instanceof Error ? err.message : "Could not verify token." }, { status: 400 });
         }
@@ -48,11 +48,18 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       method: "GET",
       path: "/repos",
       handler: async (req) => {
-        const q = new URL(req.url).searchParams.get("q")?.trim().toLowerCase();
+        const params = new URL(req.url).searchParams;
+        const q = params.get("q")?.trim().toLowerCase();
+        const filter = params.get("filter") ?? "all";
         try {
-          const repos = await listRepos(100);
-          const filtered = q ? repos.filter((r) => `${r.fullName} ${r.description ?? ""}`.toLowerCase().includes(q)) : repos;
-          return Response.json(filtered);
+          let repos = await listRepos(100);
+          if (filter === "public") repos = repos.filter((r) => !r.private);
+          else if (filter === "private") repos = repos.filter((r) => r.private);
+          else if (filter === "owner") repos = repos.filter((r) => r.relationship === "owner");
+          else if (filter === "collaborator") repos = repos.filter((r) => r.relationship === "collaborator");
+          else if (filter === "organization") repos = repos.filter((r) => r.relationship === "organization");
+          if (q) repos = repos.filter((r) => `${r.fullName} ${r.description ?? ""}`.toLowerCase().includes(q));
+          return Response.json(repos);
         } catch (err) {
           return Response.json({ error: err instanceof Error ? err.message : "Could not load repositories." }, { status: 502 });
         }

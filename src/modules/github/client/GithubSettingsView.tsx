@@ -12,6 +12,7 @@ const ACCENT = getModuleAccent("github");
 export function GithubSettingsView({ initialConnected }: { initialConnected: boolean }) {
   const [connected, setConnected] = useState(initialConnected);
   const [username, setUsername] = useState<string | null>(null);
+  const [scopes, setScopes] = useState<string[]>([]);
   const [token, setToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +21,10 @@ export function GithubSettingsView({ initialConnected }: { initialConnected: boo
     if (!initialConnected) return;
     fetch("/api/modules/github/status")
       .then((res) => res.json())
-      .then((data) => setUsername(data.username ?? null));
+      .then((data) => {
+        setUsername(data.username ?? null);
+        setScopes(Array.isArray(data.scopes) ? data.scopes : []);
+      });
   }, [initialConnected]);
 
   async function handleConnect(e: FormEvent) {
@@ -40,6 +44,7 @@ export function GithubSettingsView({ initialConnected }: { initialConnected: boo
       }
       setConnected(true);
       setUsername(data.username);
+      setScopes(Array.isArray(data.scopes) ? data.scopes : []);
       setToken("");
     } finally {
       setSubmitting(false);
@@ -80,15 +85,46 @@ export function GithubSettingsView({ initialConnected }: { initialConnected: boo
         </CardHeader>
         <CardContent>
           {connected ? (
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="flex items-center gap-2 text-sm">
-                <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--success)]" />
-                <span className="font-medium">Connected{username ? ` as ${username}` : ""}</span>
-              </span>
-              <Button type="button" variant="destructive" size="sm" onClick={handleDisconnect} className="gap-1.5">
-                <Unplug className="h-3.5 w-3.5" />
-                Disconnect
-              </Button>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-sm">
+                  <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--success)]" />
+                  <span className="font-medium">Connected{username ? ` as ${username}` : ""}</span>
+                </span>
+                <Button type="button" variant="destructive" size="sm" onClick={handleDisconnect} className="gap-1.5">
+                  <Unplug className="h-3.5 w-3.5" />
+                  Disconnect
+                </Button>
+              </div>
+
+              <div className="rounded-lg border border-border bg-foreground/[0.02] p-3 dark:bg-white/[0.02]">
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground">Token access</p>
+                {scopes.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {scopes.map((s) => (
+                      <span
+                        key={s}
+                        className="rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[11px] text-foreground"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Fine-grained token — GitHub doesn&apos;t expose a scope list for these; access was set per-repository when the
+                    token was created. Fine-grained tokens are also scoped to a single resource owner (your account, or one
+                    organization) — if you expect to see organization repos or repos you collaborate on elsewhere and they&apos;re
+                    not showing up, that&apos;s why. A classic token with <code className="font-mono">repo</code> +{" "}
+                    <code className="font-mono">read:org</code> scopes covers everything your account can see in one token.
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Repos you own, repos you collaborate on, and repos from any organization you belong to can all appear in this
+                  module — that&apos;s the default behaviour of GitHub&apos;s repository list for whatever this token can see, not
+                  something Dev Nexus adds on top. Each repo shows a badge explaining which of those applies.
+                </p>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleConnect} className="flex flex-col gap-2.5">

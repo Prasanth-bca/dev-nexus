@@ -1,10 +1,11 @@
 "use client";
 
-import { FolderGit2, Lock, Star } from "lucide-react";
+import { FolderGit2, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { getModuleAccent } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
+import { RelationshipBadge, VisibilityBadge } from "./RepoBadges";
 import type { RepoSummary } from "./types";
 
 const ACCENT = getModuleAccent("github");
@@ -128,17 +129,14 @@ export function RepoList({
               )}
             />
 
-            <span className="flex items-center gap-1.5">
-              {r.private && (
-                <>
-                  <Lock className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="sr-only">Private —</span>
-                </>
-              )}
-              <span className="truncate text-sm">
-                <span className="text-muted-foreground">{rest.length > 0 ? `${owner}/` : ""}</span>
-                <span className={cn("font-medium", isSelected && "text-[var(--accent)]")}>{name}</span>
-              </span>
+            <span className="truncate text-sm">
+              <span className="text-muted-foreground">{rest.length > 0 ? `${owner}/` : ""}</span>
+              <span className={cn("font-medium", isSelected && "text-[var(--accent)]")}>{name}</span>
+            </span>
+
+            <span className="flex flex-wrap items-center gap-1">
+              <VisibilityBadge isPrivate={r.private} compact />
+              <RelationshipBadge relationship={r.relationship} ownerLogin={r.ownerLogin} compact />
             </span>
 
             {r.description && <span className="line-clamp-2 text-xs text-muted-foreground">{r.description}</span>}
