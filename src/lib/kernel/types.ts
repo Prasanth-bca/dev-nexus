@@ -64,6 +64,13 @@ export interface DashboardWidget {
   emptyMessage: string;
   /** "View all" link target — usually the module's own page. */
   href: string;
+  /**
+   * Optional real time-series for a sparkline, oldest-to-newest. Only populate this
+   * from data the module actually tracks historically (e.g. Activity's own timestamped
+   * events) — never synthesize a trend for a module that doesn't keep history, since a
+   * fabricated chart is worse than no chart.
+   */
+  trend?: number[];
 }
 
 export interface DevNexusModule {

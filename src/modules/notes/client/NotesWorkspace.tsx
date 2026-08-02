@@ -247,7 +247,10 @@ export function NotesWorkspace({ initialNotes }: { initialNotes: NoteDTO[] }) {
   const isFullView = selectedId !== null && fullView;
 
   return (
-    <div className="animate-fade-in flex h-[calc(100vh-3rem)] min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
+    // h-full, not a hardcoded viewport calc — this now correctly fills whatever
+    // height `main` (in dashboard/layout.tsx) actually has, on every breakpoint,
+    // instead of assuming a specific padding value that only held on desktop.
+    <div className="animate-fade-in flex h-full min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
       {/* Sidebar + Grid: hidden on mobile once a note is open (Preview-only there), and hidden at every
           breakpoint while a note is in Full View, since it then takes the whole module width. */}
       <div

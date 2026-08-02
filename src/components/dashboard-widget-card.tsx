@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sparkline } from "@/components/sparkline";
 import type { DashboardWidget } from "@/lib/kernel/types";
 
 interface DashboardWidgetCardProps {
@@ -37,6 +38,14 @@ export function DashboardWidgetCard({ title, icon: Icon, widget, accent = "var(-
           )}
         </CardTitle>
       </CardHeader>
+
+      {/* Only ever rendered when the module supplies real history (currently just
+          Activity) — see the `trend` doc comment on DashboardWidget. */}
+      {widget.trend && widget.trend.length > 1 && (
+        <div className="-mt-2 px-6">
+          <Sparkline data={widget.trend} accent={accent} />
+        </div>
+      )}
 
       <CardContent className="flex flex-col gap-0.5">
         {widget.items.length === 0 ? (

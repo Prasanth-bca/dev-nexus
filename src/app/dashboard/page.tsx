@@ -1,60 +1,106 @@
-import { LayoutGrid, type LucideIcon } from "lucide-react";
+import { Suspense } from "react";
+import Link from "next/link";
+import { FolderGit2, KeyRound, LayoutGrid, Mail, MessageSquarePlus, Plus, Upload, Vault } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getModules } from "@/modules/loaded";
-import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/empty-state";
-import { DashboardWidgetCard } from "@/components/dashboard-widget-card";
-import { getModuleAccent, getModuleIcon } from "@/lib/icon-map";
-import type { DashboardWidget } from "@/lib/kernel/types";
+import { getEnabledModuleCount, getGreetingName, getModuleStatValue, getSecretCount, timeOfDayGreeting } from "./dashboard-data";
+import { HeroStat, HeroStatSkeleton } from "./HeroStat";
+import { ModuleWidgetSlot, WidgetCardSkeleton } from "./ModuleWidgetSlot";
 
-interface WidgetEntry {
-  id: string;
-  title: string;
-  icon: LucideIcon;
-  accent: string;
-  widget: DashboardWidget;
-}
+const QUICK_ACTIONS = [
+  { label: "New Note", href: "/dashboard/notes?new=1", icon: Plus, accent: "var(--module-notes)" },
+  { label: "New Chat", href: "/dashboard/ai-assistant?new=1", icon: MessageSquarePlus, accent: "var(--module-ai)" },
+  { label: "Upload File", href: "/dashboard/file-vault", icon: Upload, accent: "var(--module-vault)" },
+  { label: "Store Secret", href: "/dashboard/secrets", icon: KeyRound, accent: "var(--module-secrets)" },
+];
+
+/**
+ * Widget grid layout — a fixed 12-column arrangement for the six real modules rather
+ * than a generic system, since the set of modules and their natural card sizes (Activity
+ * wants width for its sparkline, File Vault wants width for thumbnails) are known ahead
+ * of time. New modules fall back to a plain 4-column tile via the `default` span below.
+ */
+const GRID_SPANS: Record<string, string> = {
+  "ai-assistant": "col-span-12 lg:col-span-6",
+  activity: "col-span-12 lg:col-span-6",
+  notes: "col-span-12 md:col-span-6 lg:col-span-4",
+  gmail: "col-span-12 md:col-span-6 lg:col-span-4",
+  github: "col-span-12 md:col-span-6 lg:col-span-4",
+  "file-vault": "col-span-12",
+};
+const DEFAULT_SPAN = "col-span-12 md:col-span-6 lg:col-span-4";
 
 export default async function DashboardHome() {
   const loaded = await getModules();
-
-  const widgets = (
-    await Promise.all(
-      loaded.map(async (m): Promise<WidgetEntry | null> => {
-        if (!m.enabled || !m.module.widget || !m.ctx) return null;
-        try {
-          const widget = await m.module.widget(m.ctx);
-          return {
-            id: m.module.manifest.id,
-            title: m.module.manifest.name,
-            icon: getModuleIcon(m.module.manifest.icon),
-            accent: getModuleAccent(m.module.manifest.id),
-            widget,
-          };
-        } catch {
-          // A module's widget failing (e.g. an integration that's down) shouldn't blank the whole dashboard.
-          return null;
-        }
-      })
-    )
-  ).filter((w): w is WidgetEntry => w !== null);
-
-  const enabledCount = loaded.filter((m) => m.enabled).length;
+  const moduleIds = loaded.filter((m) => m.enabled && m.module.widget).map((m) => m.module.manifest.id);
+  const [name, greeting] = [await getGreetingName(), timeOfDayGreeting()];
 
   return (
-    <div className="animate-fade-in mx-auto max-w-7xl">
-      <PageHeader
-        title="Dashboard"
-        description={`${enabledCount} module${enabledCount === 1 ? "" : "s"} active — here's what's happening.`}
-        icon={LayoutGrid}
-      />
+    <div className="mx-auto flex max-w-7xl flex-col gap-6">
+      {/* Hero */}
+      <section className="animate-fade-in-up glass rounded-xl p-5 sm:p-6">
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Good {greeting}, {name}
+              </h1>
+              <p className="text-sm text-muted-foreground">Here&apos;s what&apos;s happening across your workspace.</p>
+            </div>
 
-      {widgets.length === 0 ? (
-        <EmptyState icon={LayoutGrid} title="No widgets yet" description="Enable a module to see its activity here." />
+            <div className="flex flex-wrap gap-2">
+              {QUICK_ACTIONS.map((action) => (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  style={{ "--accent": action.accent } as React.CSSProperties}
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "gap-1.5 hover:border-[color-mix(in_srgb,var(--accent)_35%,transparent)] hover:text-[var(--accent)]"
+                  )}
+                >
+                  <action.icon className="h-3.5 w-3.5" />
+                  {action.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <Suspense fallback={<HeroStatSkeleton />}>
+              <HeroStat label="Modules Active" icon={LayoutGrid} accent="var(--primary)" load={getEnabledModuleCount} />
+            </Suspense>
+            <Suspense fallback={<HeroStatSkeleton />}>
+              <HeroStat label="Unread" icon={Mail} accent="var(--module-gmail)" load={() => getModuleStatValue("gmail")} />
+            </Suspense>
+            <Suspense fallback={<HeroStatSkeleton />}>
+              <HeroStat label="Repos" icon={FolderGit2} accent="var(--module-github)" load={() => getModuleStatValue("github")} />
+            </Suspense>
+            <Suspense fallback={<HeroStatSkeleton />}>
+              <HeroStat label="Secrets" icon={KeyRound} accent="var(--module-secrets)" load={getSecretCount} />
+            </Suspense>
+            <Suspense fallback={<HeroStatSkeleton />}>
+              <HeroStat label="Files" icon={Vault} accent="var(--module-vault)" load={() => getModuleStatValue("file-vault")} />
+            </Suspense>
+          </div>
+        </div>
+      </section>
+
+      {/* Module widgets — each tile streams in independently as its own data resolves. */}
+      {moduleIds.length === 0 ? (
+        <div className="glass flex flex-col items-center gap-2 rounded-xl p-12 text-center">
+          <LayoutGrid className="h-6 w-6 text-muted-foreground" />
+          <p className="text-sm font-medium">No widgets yet</p>
+          <p className="text-sm text-muted-foreground">Enable a module to see its activity here.</p>
+        </div>
       ) : (
-        <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {widgets.map((w, i) => (
-            <div key={w.id} style={{ "--i": i } as React.CSSProperties}>
-              <DashboardWidgetCard title={w.title} icon={w.icon} widget={w.widget} accent={w.accent} />
+        <div className="grid grid-cols-12 gap-4">
+          {moduleIds.map((id) => (
+            <div key={id} className={GRID_SPANS[id] ?? DEFAULT_SPAN}>
+              <Suspense fallback={<WidgetCardSkeleton />}>
+                <ModuleWidgetSlot moduleId={id} />
+              </Suspense>
             </div>
           ))}
         </div>
