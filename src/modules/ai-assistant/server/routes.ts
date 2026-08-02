@@ -27,14 +27,26 @@ const NOTE_TOOL_NAMES = new Set(NOTE_TOOLS.map((t) => t.name));
 const SYSTEM_PROMPT =
   "You are the Dev Nexus AI Assistant, built into the user's personal developer platform. " +
   "You have tools to search/create/update/delete the user's notes, and to list unread Gmail " +
-  "messages / add labels / mark them read / send email (if Gmail is connected — if a Gmail tool " +
-  "errors saying it's not connected or lacks permission, tell the user to (re)connect it at " +
-  "/dashboard/gmail). Use tools whenever they would help answer the question or complete the " +
-  "request. Some tools require the user's explicit approval before they run — if one is declined, " +
-  "acknowledge that and don't retry it without being asked again. Be concise and practical. Only " +
-  "delete a note when the user has clearly asked for that specific note to be removed, and only " +
-  "send an email when the user has clearly asked you to send one with a specific recipient, " +
-  "subject, and body — never send speculatively or as an example.";
+  "messages / add labels / mark them read / draft or send email (if Gmail is connected — if a " +
+  "Gmail tool errors saying it's not connected or lacks permission, tell the user to (re)connect " +
+  "it at /dashboard/gmail). Use tools whenever they would help answer the question or complete " +
+  "the request. Some tools require the user's explicit approval before they run — if one is " +
+  "declined, acknowledge that and don't retry it without being asked again. Be concise and " +
+  "practical. Only delete a note when the user has clearly asked for that specific note to be " +
+  "removed. " +
+  "For email, there are two tools with different purposes — pick deliberately: " +
+  "draft_email composes or revises a draft the user reviews, edits, and sends themselves (no " +
+  "email goes out from this tool at all); send_email sends immediately once approved, no review " +
+  "step. Use draft_email whenever the user wants to compose, write, or review something, or " +
+  "hasn't been explicit that it should go out right away — it's the safer default. Use send_email " +
+  "only when the user has clearly and specifically asked you to send an email now, with a " +
+  "recipient, subject, and body already settled — never send speculatively or as an example, and " +
+  "never treat 'draft an email' as a request to send one. Both tools require the user's approval " +
+  "before anything happens: send_email pauses for an explicit Approve/Deny; draft_email always " +
+  "renders as an editable card that only sends when the user clicks Send on it themselves. Never " +
+  "claim an email was sent unless send_email actually ran and succeeded. If the user asks you to " +
+  "change the most recent draft (tone, length, add a recipient, etc.), call draft_email again " +
+  "carrying forward every field they didn't ask to change, rather than starting over.";
 
 async function runTool(ctx: ModuleContext, name: string, args: Record<string, unknown>): Promise<string> {
   if (NOTE_TOOL_NAMES.has(name)) return runNoteTool(ctx, name, args);
@@ -328,6 +340,40 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         if (!ObjectId.isValid(params.id)) return Response.json({ error: "Invalid id" }, { status: 400 });
         await conversations().deleteOne({ _id: new ObjectId(params.id) });
         return Response.json({ ok: true });
+      },
+    },
+    {
+      // Persists the user's edits to one specific draft_email tool call in place — used both
+      // by the draft card's "Save" action and (with `sent: true`) right after a successful
+      // send, so reloading the conversation shows exactly what was actually sent rather than
+      // the AI's original, possibly-since-edited draft.
+      method: "PUT",
+      path: "/conversations/:id/draft/:toolCallId",
+      handler: async (req, params) => {
+        if (!ObjectId.isValid(params.id)) return Response.json({ error: "Invalid conversation id." }, { status: 400 });
+        const convId = new ObjectId(params.id);
+        const conversation = await conversations().findOne({ _id: convId });
+        if (!conversation) return Response.json({ error: "Conversation not found." }, { status: 404 });
+
+        const target = conversation.messages.find(
+          (m) => m.role === "assistant_tool_call" && m.toolCallId === params.toolCallId && m.toolName === "draft_email"
+        );
+        if (!target) return Response.json({ error: "Draft not found." }, { status: 404 });
+
+        const body = await req.json().catch(() => ({}) as Record<string, unknown>);
+        const patch: Record<string, unknown> = {};
+        for (const field of ["to", "cc", "bcc", "subject", "body"]) {
+          if (typeof body[field] === "string") patch[field] = body[field];
+        }
+        if (typeof body.sent === "boolean") patch.sent = body.sent;
+
+        const merged = { ...target.toolArguments, ...patch };
+        await conversations().updateOne(
+          { _id: convId },
+          { $set: { "messages.$[elem].toolArguments": merged, updatedAt: new Date() } },
+          { arrayFilters: [{ "elem.toolCallId": params.toolCallId, "elem.role": "assistant_tool_call" }] }
+        );
+        return Response.json({ ok: true, toolArguments: merged });
       },
     },
 

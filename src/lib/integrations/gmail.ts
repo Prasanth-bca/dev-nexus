@@ -285,12 +285,26 @@ export async function markEmailAsRead(messageId: string): Promise<void> {
   });
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Validates a comma-separated address list (used for To/Cc/Bcc). An empty string is valid — it just means "not set". */
+export function isValidEmailList(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  return trimmed
+    .split(",")
+    .map((s) => s.trim())
+    .every((s) => s.length > 0 && EMAIL_RE.test(s));
+}
+
 /** Requires the gmail.send scope — connections made before that scope existed need to reconnect. */
-export async function sendEmail(params: { to: string; subject: string; body: string }): Promise<{ id: string }> {
-  const message = [`To: ${params.to}`, `Subject: ${params.subject}`, `Content-Type: text/plain; charset="UTF-8"`, "", params.body].join(
-    "\r\n"
-  );
-  const raw = Buffer.from(message).toString("base64url");
+export async function sendEmail(params: { to: string; cc?: string; bcc?: string; subject: string; body: string }): Promise<{ id: string }> {
+  const headers = [`To: ${params.to}`];
+  if (params.cc?.trim()) headers.push(`Cc: ${params.cc.trim()}`);
+  if (params.bcc?.trim()) headers.push(`Bcc: ${params.bcc.trim()}`);
+  headers.push(`Subject: ${params.subject}`, `Content-Type: text/plain; charset="UTF-8"`, "", params.body);
+
+  const raw = Buffer.from(headers.join("\r\n")).toString("base64url");
 
   return gmailFetch<{ id: string }>("/messages/send", {
     method: "POST",

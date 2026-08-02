@@ -81,5 +81,11 @@ export interface ToolSettingDTO {
   requiresConfirmation: boolean;
 }
 
-/** Destructive or outbound-effect tools default to requiring confirmation unless overridden. */
+/**
+ * Destructive or outbound-effect tools default to requiring confirmation unless overridden.
+ * `draft_email` is deliberately not here — drafting has no outbound effect, so gating it would
+ * just add a pointless approval click before the user even sees the draft to review. `send_email`
+ * (a direct, immediate send the AI can call without going through the draft-review flow) does
+ * require confirmation, same as before — it's the one tool in this set that actually sends mail.
+ */
 export const DEFAULT_CONFIRM_REQUIRED = new Set(["delete_note", "send_email"]);

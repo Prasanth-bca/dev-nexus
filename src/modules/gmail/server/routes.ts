@@ -2,7 +2,16 @@ import { cookies } from "next/headers";
 import type { ModuleContext } from "@/lib/kernel/context";
 import type { RouteDefinition } from "@/lib/kernel/types";
 import { setSecret, deleteSecret } from "@/lib/kernel/secrets";
-import { addLabelToEmail, getEmail, invalidateGmailToken, isInboxFilter, listInbox, markEmailAsRead } from "@/lib/integrations/gmail";
+import {
+  addLabelToEmail,
+  getEmail,
+  invalidateGmailToken,
+  isInboxFilter,
+  isValidEmailList,
+  listInbox,
+  markEmailAsRead,
+  sendEmail,
+} from "@/lib/integrations/gmail";
 import { buildAuthUrl, exchangeCodeForTokens } from "./google";
 
 const STATE_COOKIE = "gmail_oauth_state";
@@ -180,6 +189,36 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
           return Response.json({ ok: true });
         } catch (err) {
           return Response.json({ error: err instanceof Error ? err.message : "Could not add label." }, { status: 502 });
+        }
+      },
+    },
+    {
+      // The one and only send path — always a manual, user-initiated action, whether the
+      // draft came from the AI Assistant's draft_email tool or was typed here from scratch.
+      // The AI never calls this directly; see ai-assistant/server/gmailTools.ts.
+      method: "POST",
+      path: "/send",
+      handler: async (req) => {
+        const body = await req.json().catch(() => ({}) as Record<string, unknown>);
+        const to = typeof body.to === "string" ? body.to.trim() : "";
+        const cc = typeof body.cc === "string" ? body.cc.trim() : "";
+        const bcc = typeof body.bcc === "string" ? body.bcc.trim() : "";
+        const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+        const emailBody = typeof body.body === "string" ? body.body : "";
+
+        if (!to || !subject || !emailBody) {
+          return Response.json({ error: "To, subject, and body are required." }, { status: 400 });
+        }
+        if (!isValidEmailList(to) || !isValidEmailList(cc) || !isValidEmailList(bcc)) {
+          return Response.json({ error: "One or more email addresses are invalid." }, { status: 400 });
+        }
+
+        try {
+          const result = await sendEmail({ to, cc: cc || undefined, bcc: bcc || undefined, subject, body: emailBody });
+          ctx.events.emit("gmail.email.sent", { to, subject });
+          return Response.json({ ok: true, id: result.id });
+        } catch (err) {
+          return Response.json({ error: err instanceof Error ? err.message : "Could not send email." }, { status: 502 });
         }
       },
     },

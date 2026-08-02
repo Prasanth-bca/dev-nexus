@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { getModuleAccent } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
+import { EmailDraftCard } from "./EmailDraftCard";
 
 const ACCENT = getModuleAccent("ai-assistant");
 
@@ -52,7 +53,39 @@ function AssistantAvatar() {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({
+  message,
+  conversationId,
+  regenerateDisabled,
+  discarded,
+  onDiscardDraft,
+  onRegenerateDraft,
+}: {
+  message: Message;
+  conversationId: string | null;
+  regenerateDisabled: boolean;
+  discarded: boolean;
+  onDiscardDraft: (toolCallId: string) => void;
+  onRegenerateDraft: (instruction: string) => void;
+}) {
+  if (message.role === "assistant_tool_call" && message.toolName === "draft_email" && message.toolCallId && conversationId) {
+    // An editable form, not a machine-action card — drafting has no outbound effect, so this
+    // renders as something to work with rather than something to approve.
+    if (discarded) return null;
+    return (
+      <div className="animate-fade-in-up flex w-full items-start gap-2.5">
+        <div aria-hidden className="w-7 shrink-0" />
+        <EmailDraftCard
+          conversationId={conversationId}
+          toolCallId={message.toolCallId}
+          initial={message.toolArguments ?? {}}
+          regenerateDisabled={regenerateDisabled}
+          onDiscard={() => onDiscardDraft(message.toolCallId!)}
+          onRegenerate={onRegenerateDraft}
+        />
+      </div>
+    );
+  }
   if (message.role === "assistant_tool_call") {
     // Tool activity reads as a machine action, not prose — give it its own bordered
     // card so it never gets mistaken for something the assistant "said".
@@ -142,6 +175,7 @@ export function ChatView({
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [discardedDrafts, setDiscardedDrafts] = useState<Set<string>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
 
@@ -247,9 +281,9 @@ export function ChatView({
     }
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!input.trim() || sending || pending) return;
+  /** Shared by the composer submit and the draft card's "Regenerate" action — both are just a new chat turn. */
+  async function sendChatMessage(messageText: string) {
+    if (!messageText.trim() || sending || pending) return;
 
     let convId = activeId;
     if (!convId) {
@@ -260,9 +294,7 @@ export function ChatView({
       setConversations((prev) => [{ id: data.id, title: data.title, updatedAt: data.updatedAt }, ...prev]);
     }
 
-    const messageText = input.trim();
     setMessages((prev) => [...prev, { role: "user", content: messageText }]);
-    setInput("");
     setError(null);
     setSending(true);
 
@@ -285,6 +317,14 @@ export function ChatView({
     } finally {
       setSending(false);
     }
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text) return;
+    setInput("");
+    await sendChatMessage(text);
   }
 
   async function respondToConfirmation(approve: boolean) {
@@ -439,7 +479,15 @@ export function ChatView({
               </div>
             )}
             {messages.map((m, i) => (
-              <MessageBubble key={i} message={m} />
+              <MessageBubble
+                key={i}
+                message={m}
+                conversationId={activeId}
+                regenerateDisabled={sending || !!pending}
+                discarded={!!m.toolCallId && discardedDrafts.has(m.toolCallId)}
+                onDiscardDraft={(id) => setDiscardedDrafts((prev) => new Set(prev).add(id))}
+                onRegenerateDraft={sendChatMessage}
+              />
             ))}
             {sending && !pending && <TypingIndicator />}
             <div ref={bottomRef} />
@@ -456,12 +504,41 @@ export function ChatView({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">Approval required</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    The assistant wants to run <code className="font-mono text-foreground">{pending.name}</code>. Nothing runs
-                    until you approve.
+                    {pending.name === "send_email" ? (
+                      "The assistant wants to send an email. Nothing sends until you approve."
+                    ) : (
+                      <>
+                        The assistant wants to run <code className="font-mono text-foreground">{pending.name}</code>. Nothing runs
+                        until you approve.
+                      </>
+                    )}
                   </p>
-                  <pre className="mt-2 max-h-32 overflow-auto rounded-lg border border-border bg-background/60 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
-                    {JSON.stringify(pending.arguments, null, 2)}
-                  </pre>
+                  {pending.name === "send_email" ? (
+                    <dl className="mt-2 flex flex-col gap-1.5 rounded-lg border border-border bg-background/60 px-3 py-2.5 text-xs">
+                      {(["to", "cc", "bcc", "subject"] as const).map((field) => {
+                        const value = pending.arguments[field];
+                        if (typeof value !== "string" || !value.trim()) return null;
+                        return (
+                          <div key={field} className="flex gap-2">
+                            <dt className="w-14 shrink-0 font-medium text-muted-foreground capitalize">{field}</dt>
+                            <dd className="min-w-0 truncate">{value}</dd>
+                          </div>
+                        );
+                      })}
+                      {typeof pending.arguments.body === "string" && (
+                        <div className="flex flex-col gap-0.5 border-t border-border pt-1.5">
+                          <dt className="font-medium text-muted-foreground">Body</dt>
+                          <dd className="max-h-28 overflow-auto leading-relaxed whitespace-pre-wrap text-foreground/90">
+                            {pending.arguments.body}
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                  ) : (
+                    <pre className="mt-2 max-h-32 overflow-auto rounded-lg border border-border bg-background/60 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                      {JSON.stringify(pending.arguments, null, 2)}
+                    </pre>
+                  )}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button
                       type="button"

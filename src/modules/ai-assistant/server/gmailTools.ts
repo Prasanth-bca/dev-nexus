@@ -33,13 +33,38 @@ export const GMAIL_TOOLS: ToolDef[] = [
     },
   },
   {
-    name: "send_email",
+    name: "draft_email",
     description:
-      "Send a new email from the user's connected Gmail account. Only call this when the user has clearly asked to send an email, and confirm the recipient/subject/body match what they asked for.",
+      "Compose or revise an email draft for the user to review, edit, and send themselves — this never sends anything. Always use " +
+      "this instead of trying to send email directly; there is no tool that sends on your behalf. Call it once to create a new " +
+      "draft, or call it again with the same intent plus the requested change (e.g. 'make it more professional', 'add a CC', " +
+      "'shorten it') to revise the most recent draft in this conversation — carry forward every field the user didn't ask to " +
+      "change rather than starting over from a blank draft.",
     parameters: {
       type: "object",
       properties: {
-        to: { type: "string", description: "Recipient email address" },
+        to: { type: "string", description: "Recipient email address(es), comma-separated" },
+        cc: { type: "string", description: "CC email address(es), comma-separated (omit if none)" },
+        bcc: { type: "string", description: "BCC email address(es), comma-separated (omit if none)" },
+        subject: { type: "string" },
+        body: { type: "string", description: "Plain text email body" },
+      },
+      required: ["to", "subject", "body"],
+    },
+  },
+  {
+    name: "send_email",
+    description:
+      "Send an email immediately from the user's connected Gmail account, without a review step — only use this when the user " +
+      "has clearly asked you to send an email right now with a specific recipient, subject, and body, not when they want to " +
+      "compose, draft, or review something first (use draft_email for that). This still requires the user's explicit approval " +
+      "before it actually sends — never send speculatively or as an example.",
+    parameters: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "Recipient email address(es), comma-separated" },
+        cc: { type: "string", description: "CC email address(es), comma-separated (omit if none)" },
+        bcc: { type: "string", description: "BCC email address(es), comma-separated (omit if none)" },
         subject: { type: "string" },
         body: { type: "string", description: "Plain text email body" },
       },
@@ -66,10 +91,28 @@ export async function runGmailTool(ctx: ModuleContext, name: string, args: Recor
         await markEmailAsRead(String(args.messageId ?? ""));
         return JSON.stringify({ ok: true });
       }
+      case "draft_email": {
+        // No Gmail API call and no confirmation gate — drafting has no outbound effect.
+        // The draft is rendered as an editable card client-side (see ChatView's
+        // MessageBubble); actually sending it is a manual action against a separate
+        // route (gmail's POST /send) that this loop never touches.
+        return JSON.stringify({
+          to: String(args.to ?? "").trim(),
+          cc: typeof args.cc === "string" ? args.cc.trim() : "",
+          bcc: typeof args.bcc === "string" ? args.bcc.trim() : "",
+          subject: String(args.subject ?? "").trim(),
+          body: String(args.body ?? ""),
+        });
+      }
       case "send_email": {
-        const to = String(args.to ?? "");
-        const subject = String(args.subject ?? "");
-        const result = await sendEmail({ to, subject, body: String(args.body ?? "") });
+        // Only reachable after the confirmation gate approves it (send_email is in
+        // DEFAULT_CONFIRM_REQUIRED) — unlike draft_email, this one really sends.
+        const to = String(args.to ?? "").trim();
+        const cc = typeof args.cc === "string" ? args.cc.trim() : "";
+        const bcc = typeof args.bcc === "string" ? args.bcc.trim() : "";
+        const subject = String(args.subject ?? "").trim();
+        const body = String(args.body ?? "");
+        const result = await sendEmail({ to, cc: cc || undefined, bcc: bcc || undefined, subject, body });
         ctx.events.emit("gmail.email.sent", { to, subject, source: "ai-assistant" });
         return JSON.stringify({ ok: true, id: result.id });
       }
