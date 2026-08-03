@@ -104,7 +104,7 @@ function buildOpenAiMessages(systemPrompt: string, history: Turn[]) {
 
 type OpenAiRequestResult =
   | { ok: true; data: { choices?: Array<{ message?: { content?: string; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } }> } }
-  | { ok: false; status: number; bodyText: string; code?: string };
+  | { ok: false; status: number; bodyText: string; code?: string; failedGeneration?: string };
 
 async function requestOpenAi(
   baseUrl: string,
@@ -133,12 +133,39 @@ async function requestOpenAi(
 
   const bodyText = await res.text();
   let code: string | undefined;
+  let failedGeneration: string | undefined;
   try {
-    code = JSON.parse(bodyText)?.error?.code;
+    const parsed = JSON.parse(bodyText);
+    code = parsed?.error?.code;
+    failedGeneration = parsed?.error?.failed_generation;
   } catch {
-    // response wasn't JSON — leave code undefined
+    // response wasn't JSON — leave code/failedGeneration undefined
   }
-  return { ok: false, status: res.status, bodyText, code };
+  return { ok: false, status: res.status, bodyText, code, failedGeneration };
+}
+
+/**
+ * Groq's Llama models occasionally write a tool call as inline pseudo-XML text —
+ * `<function=name{"arg":"value"}</function>` — instead of the API's structured `tool_calls`
+ * field, which gets the whole response rejected as `tool_use_failed`. Rather than discard a
+ * generation that already contains a perfectly identifiable, well-formed call and just retry
+ * blind, parse it directly out of `error.failed_generation` and use it as-is.
+ */
+function recoverToolCallFromFailedGeneration(
+  failedGeneration: string | undefined,
+  tools: ToolDef[]
+): { name: string; arguments: Record<string, unknown> } | null {
+  if (!failedGeneration) return null;
+  const match = /<function=([\w.-]+)\s*(\{[\s\S]*\})\s*<\/function>/.exec(failedGeneration);
+  if (!match) return null;
+  const [, name, argsJson] = match;
+  if (!tools.some((t) => t.name === name)) return null;
+  try {
+    const args = JSON.parse(argsJson);
+    return args && typeof args === "object" ? { name, arguments: args } : null;
+  } catch {
+    return null;
+  }
 }
 
 function toProviderResult(message?: { content?: string; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> }): ProviderResult {
@@ -160,14 +187,23 @@ async function callOpenAiCompatible(baseUrl: string, { apiKey, model, systemProm
 
   // Some models (seen with Groq-hosted Llama models) occasionally try to emit a tool call as
   // free-form text instead of a structured one, and the API rejects the whole response for it.
-  // Generation isn't deterministic, so retrying the identical request once often just succeeds.
   if (!result.ok && result.code === "tool_use_failed") {
+    const recovered = recoverToolCallFromFailedGeneration(result.failedGeneration, tools);
+    if (recovered) {
+      return { type: "tool_call", id: crypto.randomUUID(), name: recovered.name, arguments: recovered.arguments };
+    }
+    // Couldn't recover a well-formed call out of it — generation isn't deterministic, so
+    // retrying the identical request once often just succeeds outright.
     result = await requestOpenAi(baseUrl, apiKey, model, systemPrompt, history, tools);
   }
 
-  // Still failing the same way — fall back to answering without tools so the user gets a plain
-  // reply (e.g. "I can't do that") instead of a raw provider error dumped into the chat.
+  // Still failing the same way — try recovery again, then fall back to answering without tools
+  // so the user gets a plain reply (e.g. "I can't do that") instead of a raw provider error.
   if (!result.ok && result.code === "tool_use_failed") {
+    const recovered = recoverToolCallFromFailedGeneration(result.failedGeneration, tools);
+    if (recovered) {
+      return { type: "tool_call", id: crypto.randomUUID(), name: recovered.name, arguments: recovered.arguments };
+    }
     const fallback = await requestOpenAi(baseUrl, apiKey, model, systemPrompt, history, []);
     if (fallback.ok) {
       const message = fallback.data.choices?.[0]?.message;

@@ -24,11 +24,18 @@ interface NoteDoc extends Document {
 export const NOTE_TOOLS: ToolDef[] = [
   {
     name: "search_notes",
-    description: "Search the user's notes by keyword across title, content, and tags. Returns up to 10 matches with their id.",
+    description:
+      "Search or list the user's notes. Omit query (or pass an empty string) to list notes without a keyword filter — this is " +
+      "the right call for requests like 'list my notes' or 'show my pinned notes', not just for keyword search. Combine with " +
+      "pinned/favorite to narrow the list. Returns up to 10 matches, most recently updated first, including id/title/category/" +
+      "tags/pinned/favorite/snippet for each.",
     parameters: {
       type: "object",
-      properties: { query: { type: "string", description: "Keywords to search for" } },
-      required: ["query"],
+      properties: {
+        query: { type: "string", description: "Keywords to search for across title, content, and tags. Omit to list all notes." },
+        pinned: { type: "boolean", description: "If true, only pinned notes; if false, only unpinned. Omit for either." },
+        favorite: { type: "boolean", description: "If true, only favorited notes; if false, only non-favorited. Omit for either." },
+      },
     },
   },
   {
@@ -77,15 +84,19 @@ export async function runNoteTool(ctx: ModuleContext, name: string, args: Record
   switch (name) {
     case "search_notes": {
       const query = String(args.query ?? "").toLowerCase();
-      const notes = await collection.find({}).limit(200).toArray();
+      const notes = await collection.find({}).sort({ updatedAt: -1 }).limit(200).toArray();
       const matches = notes
         .filter((n) => `${n.title} ${n.content} ${n.tags.join(" ")}`.toLowerCase().includes(query))
+        .filter((n) => typeof args.pinned !== "boolean" || n.pinned === args.pinned)
+        .filter((n) => typeof args.favorite !== "boolean" || n.favorite === args.favorite)
         .slice(0, 10)
         .map((n) => ({
           id: n._id.toString(),
           title: n.title,
           category: n.category,
           tags: n.tags,
+          pinned: n.pinned,
+          favorite: n.favorite,
           snippet: n.content.slice(0, 200),
         }));
       return JSON.stringify(matches);
