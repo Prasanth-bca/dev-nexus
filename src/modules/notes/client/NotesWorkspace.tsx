@@ -11,7 +11,7 @@ import { ConfirmDialog } from "./ConfirmDialog";
 export type ViewFilter = "all" | "pinned" | "favorites";
 type Mode = "preview" | "edit";
 
-const EMPTY_DRAFT: NoteDraft = { title: "", content: "", category: "", tags: [], pinned: false, favorite: false };
+const EMPTY_DRAFT: NoteDraft = { title: "", content: "", category: "", tags: [], pinned: false, favorite: false, projectId: "" };
 
 function sortNotes(notes: NoteDTO[]): NoteDTO[] {
   return [...notes].sort((a, b) => {
@@ -28,6 +28,7 @@ function toDraft(note: NoteDTO): NoteDraft {
     tags: note.tags,
     pinned: note.pinned,
     favorite: note.favorite,
+    projectId: note.projectId ?? "",
   };
 }
 
@@ -38,6 +39,7 @@ function draftsEqual(a: NoteDraft, b: NoteDraft): boolean {
     a.category === b.category &&
     a.pinned === b.pinned &&
     a.favorite === b.favorite &&
+    (a.projectId ?? "") === (b.projectId ?? "") &&
     a.tags.length === b.tags.length &&
     a.tags.every((t, i) => t === b.tags[i])
   );

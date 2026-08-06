@@ -12,6 +12,9 @@ export interface NoteDoc {
   /** Embedding vector for Semantic Search — never sent to the client, see NoteDTO. */
   embedding?: number[];
   embeddingUpdatedAt?: Date;
+  /** Optional Projects-module link, stored as a plain string (the project's ObjectId) — a
+   *  reference, not duplicated data; Notes has no other awareness of the Projects module. */
+  projectId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

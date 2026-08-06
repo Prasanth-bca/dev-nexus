@@ -1,4 +1,20 @@
-import { FolderGit2, History, LayoutGrid, Mail, Settings, Sparkles, StickyNote, Vault, KeyRound, type LucideIcon } from "lucide-react";
+import {
+  FolderGit2,
+  FolderKanban,
+  History,
+  LayoutGrid,
+  Mail,
+  Settings,
+  Sparkles,
+  StickyNote,
+  Vault,
+  KeyRound,
+  CalendarDays,
+  Link2,
+  Users,
+  Server,
+  type LucideIcon,
+} from "lucide-react";
 
 /** Manual, not dynamic — mirrors the registry.ts philosophy of no scanning/dynamic import of arbitrary names. Add an entry whenever a module's manifest.icon introduces a new name. */
 const ICONS: Record<string, LucideIcon> = {
@@ -6,10 +22,15 @@ const ICONS: Record<string, LucideIcon> = {
   Sparkles,
   Mail,
   FolderGit2,
+  FolderKanban,
   Vault,
   History,
   Settings,
   KeyRound,
+  CalendarDays,
+  Link2,
+  Users,
+  Server,
 };
 
 export function getModuleIcon(name?: string): LucideIcon {
@@ -30,6 +51,7 @@ const MODULE_ACCENTS: Record<string, string> = {
   "file-vault": "var(--module-vault)",
   activity: "var(--module-activity)",
   secrets: "var(--module-secrets)",
+  projects: "var(--module-projects)",
 };
 
 export function getModuleAccent(moduleId?: string): string {

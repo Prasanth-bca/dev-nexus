@@ -145,6 +145,19 @@ export function FileVaultView() {
     if (file) uploadFile(file);
   }
 
+  function handleProjectChange(id: string, projectId: string) {
+    fetch(`/api/modules/file-vault/files/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId }),
+    })
+      .then((res) => res.json())
+      .then((updated: VaultFile) => {
+        setFiles((prev) => prev?.map((f) => (f.id === id ? updated : f)) ?? prev);
+      })
+      .catch(() => toast.error("Could not update project assignment."));
+  }
+
   function handleDelete(id: string) {
     fetch(`/api/modules/file-vault/files/${id}`, { method: "DELETE" }).then((res) => {
       if (!res.ok) {
@@ -351,6 +364,9 @@ export function FileVaultView() {
         onOpenChange={(open) => !open && setPreviewId(null)}
         onRequestDelete={() => {
           if (previewFile) setDeleteId(previewFile.id);
+        }}
+        onProjectChange={(projectId) => {
+          if (previewFile) handleProjectChange(previewFile.id, projectId);
         }}
       />
 

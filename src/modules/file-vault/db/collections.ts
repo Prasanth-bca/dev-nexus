@@ -9,6 +9,8 @@ export interface FileVaultDoc {
   mimeType: string;
   size: number;
   category: FileCategory;
+  /** Optional Projects-module link, stored as a plain string (the project's ObjectId). */
+  projectId?: string;
   uploadedAt: Date;
 }
 
@@ -18,6 +20,7 @@ export interface FileVaultDTO {
   mimeType: string;
   size: number;
   category: FileCategory;
+  projectId?: string;
   uploadedAt: string;
 }
 
@@ -37,6 +40,7 @@ export function toDTO(id: string, doc: FileVaultDoc): FileVaultDTO {
     mimeType: doc.mimeType,
     size: doc.size,
     category: doc.category,
+    projectId: doc.projectId,
     uploadedAt: doc.uploadedAt.toISOString(),
   };
 }

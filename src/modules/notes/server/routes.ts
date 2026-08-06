@@ -27,6 +27,7 @@ function sanitizeInput(body: Record<string, unknown>) {
   return { title, content, category, tags, pinned, favorite };
 }
 
+
 export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
   const collection = () => ctx.db.collection<NoteDoc>(NOTES_COLLECTION);
 
@@ -34,9 +35,12 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
     {
       method: "GET",
       path: "/",
-      handler: async () => {
+      handler: async (req) => {
+        const projectId = new URL(req.url).searchParams.get("projectId");
+        const filter: Record<string, unknown> = {};
+        if (projectId) filter.projectId = projectId;
         const items = await collection()
-          .find({}, { projection: { embedding: 0 } })
+          .find(filter, { projection: { embedding: 0 } })
           .sort({ pinned: -1, updatedAt: -1 })
           .toArray();
         return Response.json(items);
@@ -62,6 +66,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
           createdAt: now,
           updatedAt: now,
         };
+        if (typeof body.projectId === "string" && body.projectId.trim()) note.projectId = body.projectId.trim();
         const result = await collection().insertOne(note);
         ctx.events.emit("notes.created", { id: result.insertedId.toString(), title: note.title });
         void reembedNote(ctx, result.insertedId, note.title, note.content);
@@ -86,9 +91,13 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         if (pinned !== undefined) update.pinned = pinned;
         if (favorite !== undefined) update.favorite = favorite;
 
+        // projectId is three-way: absent in the body (don't touch it), "" (unassign), or a real id.
+        const clearProject = "projectId" in body && !(typeof body.projectId === "string" && body.projectId.trim());
+        if (typeof body.projectId === "string" && body.projectId.trim()) update.projectId = body.projectId.trim();
+
         const result = await collection().findOneAndUpdate(
           { _id },
-          { $set: update },
+          { $set: update, ...(clearProject ? { $unset: { projectId: "" } } : {}) },
           { returnDocument: "after", projection: { embedding: 0 } }
         );
         if (!result) return Response.json({ error: "not found" }, { status: 404 });

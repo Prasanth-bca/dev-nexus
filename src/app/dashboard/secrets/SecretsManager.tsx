@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { ProjectSelect, useProjects } from "@/components/project-select";
 import { getModuleAccent } from "@/lib/icon-map";
 
 interface SecretMeta {
   name: string;
   updatedAt: string;
+  projectId?: string;
 }
 
 const ACCENT = getModuleAccent("secrets");
@@ -27,6 +29,7 @@ export function SecretsManager({ initialSecrets }: { initialSecrets: SecretMeta[
   const [revealed, setRevealed] = useState<Record<string, string>>({});
   const [revealing, setRevealing] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const projects = useProjects();
 
   async function refresh() {
     const res = await fetch("/api/secrets");
@@ -73,6 +76,15 @@ export function SecretsManager({ initialSecrets }: { initialSecrets: SecretMeta[
     } finally {
       setRevealing(null);
     }
+  }
+
+  async function handleProjectChange(secretName: string, projectId: string) {
+    await fetch(`/api/secrets/${encodeURIComponent(secretName)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId }),
+    });
+    setSecrets((prev) => prev.map((s) => (s.name === secretName ? { ...s, projectId: projectId || undefined } : s)));
   }
 
   async function handleDelete(secretName: string) {
@@ -186,6 +198,14 @@ export function SecretsManager({ initialSecrets }: { initialSecrets: SecretMeta[
                 <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">
                   {`Updated ${new Date(s.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`}
                 </span>
+
+                <ProjectSelect
+                  value={s.projectId ?? ""}
+                  onChange={(projectId) => handleProjectChange(s.name, projectId)}
+                  projects={projects}
+                  ariaLabel={`Assign ${s.name} to project`}
+                  className="hidden h-8 shrink-0 rounded-lg border border-input bg-foreground/[0.03] px-2 text-xs outline-none sm:block dark:bg-white/[0.04]"
+                />
 
                 <div className="flex shrink-0 items-center gap-1">
                   <Button

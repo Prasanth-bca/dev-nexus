@@ -21,10 +21,12 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const url = new URL(req.url);
         const q = url.searchParams.get("q")?.trim();
         const category = url.searchParams.get("category");
+        const projectId = url.searchParams.get("projectId");
 
         const filter: Record<string, unknown> = {};
         if (category && category !== "all") filter.category = category;
         if (q) filter.filename = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+        if (projectId) filter.projectId = projectId;
 
         const docs = await collection().find(filter).sort({ uploadedAt: -1 }).toArray();
         return Response.json(docs.map((d) => toDTO(d._id.toString(), d)));
@@ -54,6 +56,8 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
           category: categorize(mimeType),
           uploadedAt: new Date(),
         };
+        const projectId = form?.get("projectId");
+        if (typeof projectId === "string" && projectId.trim()) doc.projectId = projectId.trim();
 
         const { insertedId } = await collection().insertOne(doc);
         ctx.events.emit("file-vault.uploaded", { id: insertedId.toString(), filename: doc.filename });
@@ -82,6 +86,26 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         } catch {
           return Response.json({ error: "File content is missing on disk." }, { status: 404 });
         }
+      },
+    },
+    {
+      method: "PUT",
+      path: "/files/:id",
+      handler: async (req, params) => {
+        const _id = parseId(params.id);
+        if (!_id) return Response.json({ error: "File not found." }, { status: 404 });
+
+        const body = await req.json().catch(() => ({}) as Record<string, unknown>);
+        const projectId = typeof body.projectId === "string" && body.projectId.trim() ? body.projectId.trim() : null;
+
+        const result = await collection().findOneAndUpdate(
+          { _id },
+          projectId ? { $set: { projectId } } : { $unset: { projectId: "" } },
+          { returnDocument: "after" }
+        );
+        if (!result) return Response.json({ error: "File not found." }, { status: 404 });
+
+        return Response.json(toDTO(result._id.toString(), result));
       },
     },
     {

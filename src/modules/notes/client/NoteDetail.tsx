@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Download, Maximize2, Minimize2, Pencil, Pin, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ProjectSelect, useProjects } from "@/components/project-select";
 import { CATEGORIES, TEMPLATES } from "../constants";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { MarkdownPreview } from "./MarkdownPreview";
@@ -20,6 +21,7 @@ export interface NoteDraft {
   tags: string[];
   pinned: boolean;
   favorite: boolean;
+  projectId?: string;
 }
 
 function TagsInput({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
@@ -114,6 +116,8 @@ export function NoteDetail({
 }) {
   const isEditing = mode === "edit";
   const showTemplates = isNew && isEditing && !draft.content;
+  const projects = useProjects();
+  const assignedProject = draft.projectId ? projects.find((p) => p._id === draft.projectId) : undefined;
 
   return (
     <div
@@ -173,6 +177,16 @@ export function NoteDetail({
 
             {isEditing && noteId && (
               <SuggestButton noteId={noteId} onApply={(s) => onChange({ category: s.category || draft.category, tags: s.tags })} />
+            )}
+
+            {isEditing ? (
+              <ProjectSelect value={draft.projectId ?? ""} onChange={(projectId) => onChange({ projectId })} projects={projects} />
+            ) : (
+              assignedProject && (
+                <span className="rounded-full bg-foreground/[0.05] px-2 py-0.5 text-[11px] text-muted-foreground dark:bg-white/[0.06]">
+                  {assignedProject.name}
+                </span>
+              )
             )}
           </div>
         </div>

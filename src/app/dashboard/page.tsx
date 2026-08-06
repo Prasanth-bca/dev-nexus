@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { FolderGit2, KeyRound, LayoutGrid, Mail, MessageSquarePlus, Plus, Upload, Vault } from "lucide-react";
+import { FolderGit2, FolderKanban, KeyRound, LayoutGrid, Mail, MessageSquarePlus, Plus, Upload, Vault } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getModules } from "@/modules/loaded";
@@ -9,6 +9,7 @@ import { HeroStat, HeroStatSkeleton } from "./HeroStat";
 import { ModuleWidgetSlot, WidgetCardSkeleton } from "./ModuleWidgetSlot";
 
 const QUICK_ACTIONS = [
+  { label: "New Project", href: "/dashboard/projects?new=1", icon: FolderKanban, accent: "var(--module-projects)" },
   { label: "New Note", href: "/dashboard/notes?new=1", icon: Plus, accent: "var(--module-notes)" },
   { label: "New Chat", href: "/dashboard/ai-assistant?new=1", icon: MessageSquarePlus, accent: "var(--module-ai)" },
   { label: "Upload File", href: "/dashboard/file-vault", icon: Upload, accent: "var(--module-vault)" },
@@ -28,6 +29,7 @@ const GRID_SPANS: Record<string, string> = {
   gmail: "col-span-12 md:col-span-6 lg:col-span-4",
   github: "col-span-12 md:col-span-6 lg:col-span-4",
   "file-vault": "col-span-12",
+  projects: "col-span-12 md:col-span-6 lg:col-span-4",
 };
 const DEFAULT_SPAN = "col-span-12 md:col-span-6 lg:col-span-4";
 

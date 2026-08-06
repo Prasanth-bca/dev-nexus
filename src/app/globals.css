@@ -77,6 +77,7 @@
   --module-vault: #8b5cf6;
   --module-activity: #ec4899;
   --module-secrets: #10b981;
+  --module-projects: #f97316;
 }
 
 .dark {
@@ -167,6 +168,7 @@
   --color-module-vault: var(--module-vault);
   --color-module-activity: var(--module-activity);
   --color-module-secrets: var(--module-secrets);
+  --color-module-projects: var(--module-projects);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);

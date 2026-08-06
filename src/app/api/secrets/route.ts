@@ -1,7 +1,9 @@
 import { listSecretNames, setSecret } from "@/lib/kernel/secrets";
 
-export async function GET() {
-  return Response.json(await listSecretNames());
+export async function GET(req: Request) {
+  const projectId = new URL(req.url).searchParams.get("projectId");
+  const names = await listSecretNames();
+  return Response.json(projectId ? names.filter((n) => n.projectId === projectId) : names);
 }
 
 export async function POST(req: Request) {

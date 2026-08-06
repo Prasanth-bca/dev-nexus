@@ -24,6 +24,9 @@ interface SecretDoc {
   value: string;
   authTag: string;
   updatedAt: Date;
+  /** Optional Projects-module link — a plain string (the project's ObjectId), not an ObjectId
+   *  type, so this kernel file stays free of a dependency on any specific module. */
+  projectId?: string;
 }
 
 export async function setSecret(name: string, value: string): Promise<void> {
@@ -57,17 +60,37 @@ export async function getSecret(name: string): Promise<string> {
   return decrypted.toString("utf8");
 }
 
-export async function listSecretNames(): Promise<{ name: string; updatedAt: string }[]> {
+export async function listSecretNames(): Promise<{ name: string; updatedAt: string; projectId?: string }[]> {
   const db = await getDb();
   const docs = await db
     .collection<SecretDoc>(COLLECTION)
-    .find({}, { projection: { name: 1, updatedAt: 1 } })
+    .find({}, { projection: { name: 1, updatedAt: 1, projectId: 1 } })
     .sort({ name: 1 })
     .toArray();
-  return docs.map((d) => ({ name: d.name, updatedAt: d.updatedAt.toISOString() }));
+  return docs.map((d) => ({ name: d.name, updatedAt: d.updatedAt.toISOString(), projectId: d.projectId }));
 }
 
 export async function deleteSecret(name: string): Promise<void> {
   const db = await getDb();
   await db.collection(COLLECTION).deleteOne({ name });
+}
+
+/** Assigns (or clears, with `null`) which project a secret belongs to. Doesn't touch the encrypted value. */
+export async function setSecretProject(name: string, projectId: string | null): Promise<void> {
+  const db = await getDb();
+  if (projectId) {
+    await db.collection<SecretDoc>(COLLECTION).updateOne({ name }, { $set: { projectId } });
+  } else {
+    await db.collection<SecretDoc>(COLLECTION).updateOne({ name }, { $unset: { projectId: "" } });
+  }
+}
+
+export async function listSecretsByProject(projectId: string): Promise<{ name: string; updatedAt: string }[]> {
+  const db = await getDb();
+  const docs = await db
+    .collection<SecretDoc>(COLLECTION)
+    .find({ projectId }, { projection: { name: 1, updatedAt: 1 } })
+    .sort({ name: 1 })
+    .toArray();
+  return docs.map((d) => ({ name: d.name, updatedAt: d.updatedAt.toISOString() }));
 }

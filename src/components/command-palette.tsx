@@ -3,7 +3,7 @@
 import { useEffect, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ArrowUpRight, FileText, LogOut, MessageSquarePlus, Moon, Search, Sun } from "lucide-react";
+import { ArrowUpRight, FileText, FolderKanban, LogOut, MessageSquarePlus, Moon, Search, Sun } from "lucide-react";
 import { getModuleAccent } from "@/lib/icon-map";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ const GROUP_MODULE_IDS: Record<string, string> = {
   GitHub: "github",
   "File Vault": "file-vault",
   Activity: "activity",
+  Projects: "projects",
 };
 
 function groupAccent(group: string): string {
@@ -97,6 +98,15 @@ export function CommandPalette({ collapsed = false }: { collapsed?: boolean } = 
   }
 
   const quickActions: QuickAction[] = [
+    {
+      id: "new-project",
+      label: "Create Project",
+      icon: FolderKanban,
+      run: () => {
+        close();
+        router.push("/dashboard/projects?new=1");
+      },
+    },
     {
       id: "new-note",
       label: "New Note",

@@ -5,6 +5,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatBytes, formatRelativeTime } from "@/lib/format";
 import { getModuleAccent } from "@/lib/icon-map";
+import { ProjectSelect, useProjects } from "@/components/project-select";
 import type { VaultFile } from "./types";
 
 const accent = getModuleAccent("file-vault");
@@ -16,11 +17,15 @@ export function FilePreviewDialog({
   file,
   onOpenChange,
   onRequestDelete,
+  onProjectChange,
 }: {
   file: VaultFile | null;
   onOpenChange: (open: boolean) => void;
   onRequestDelete: () => void;
+  onProjectChange: (projectId: string) => void;
 }) {
+  const projects = useProjects();
+
   return (
     <Dialog open={file !== null} onOpenChange={onOpenChange}>
       <DialogContent style={{ "--accent": accent } as React.CSSProperties} className="sm:max-w-3xl">
@@ -65,6 +70,13 @@ export function FilePreviewDialog({
               <span className={`${META_PILL} font-mono`}>{file.mimeType}</span>
               <span className={META_PILL}>uploaded {formatRelativeTime(file.uploadedAt)}</span>
             </div>
+
+            <ProjectSelect
+              value={file.projectId ?? ""}
+              onChange={onProjectChange}
+              projects={projects}
+              className="h-8 w-full rounded-lg border border-input bg-foreground/[0.03] px-2.5 text-sm outline-none dark:bg-white/[0.04]"
+            />
 
             <DialogFooter>
               <Button type="button" variant="destructive" onClick={onRequestDelete}>

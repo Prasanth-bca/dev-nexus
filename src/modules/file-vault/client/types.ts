@@ -6,5 +6,6 @@ export interface VaultFile {
   mimeType: string;
   size: number;
   category: FileCategory;
+  projectId?: string;
   uploadedAt: string;
 }
