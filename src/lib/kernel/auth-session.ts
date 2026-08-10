@@ -1,8 +1,11 @@
+import { getSessionSecretBase64 } from "./instance-keys";
+
 /**
  * Session token signing/verification — deliberately built on Web Crypto (globalThis.crypto.subtle)
- * instead of Node's `crypto` module, because this is imported by middleware.ts, which runs in the
- * Edge runtime and can't use Node built-ins. Password hashing (which needs real Node crypto) lives
- * in auth-password.ts instead, imported only by route handlers that run in the Node runtime.
+ * instead of Node's `crypto` module, because this is imported by proxy.ts (formerly middleware.ts),
+ * which can run in the Edge runtime and can't use Node built-ins. Password hashing (which needs
+ * real Node crypto) lives in auth-password.ts instead, imported only by route handlers that run in
+ * the Node runtime.
  */
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
@@ -32,8 +35,7 @@ function base64Decode(str: string): Uint8Array {
 }
 
 async function getHmacKey(): Promise<CryptoKey> {
-  const raw = process.env.SESSION_SECRET;
-  if (!raw) throw new Error("SESSION_SECRET env var is not set.");
+  const raw = await getSessionSecretBase64();
   return crypto.subtle.importKey("raw", base64Decode(raw) as BufferSource, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
 

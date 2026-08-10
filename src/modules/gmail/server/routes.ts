@@ -15,6 +15,7 @@ import {
 import { buildAuthUrl, exchangeCodeForTokens } from "./google";
 
 const STATE_COOKIE = "gmail_oauth_state";
+const RETURN_COOKIE = "gmail_oauth_return";
 
 function redirectUriFor(origin: string): string {
   return `${origin}/api/modules/gmail/oauth/callback`;
@@ -73,9 +74,13 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
 
         const origin = new URL(req.url).origin;
         const state = crypto.randomUUID();
+        const returnTo = new URL(req.url).searchParams.get("returnTo");
 
         const jar = await cookies();
         jar.set(STATE_COOKIE, state, { httpOnly: true, path: "/", maxAge: 600, sameSite: "lax" });
+        if (returnTo === "setup") {
+          jar.set(RETURN_COOKIE, "setup", { httpOnly: true, path: "/", maxAge: 600, sameSite: "lax" });
+        }
 
         return new Response(null, {
           status: 302,
@@ -93,15 +98,17 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
 
         const jar = await cookies();
         const cookieState = jar.get(STATE_COOKIE)?.value;
+        const returnToSetup = jar.get(RETURN_COOKIE)?.value === "setup";
         jar.delete(STATE_COOKIE);
+        jar.delete(RETURN_COOKIE);
 
-        const redirectTo = (status: "connected" | "error", message?: string) =>
-          new Response(null, {
-            status: 302,
-            headers: {
-              Location: `${url.origin}/dashboard/gmail?status=${status}${message ? `&message=${encodeURIComponent(message)}` : ""}`,
-            },
-          });
+        const redirectTo = (status: "connected" | "error", message?: string) => {
+          const base = returnToSetup ? `${url.origin}/setup` : `${url.origin}/dashboard/gmail`;
+          const params = new URLSearchParams({ status });
+          if (returnToSetup) params.set("step", "gmail");
+          if (message) params.set("message", message);
+          return new Response(null, { status: 302, headers: { Location: `${base}?${params.toString()}` } });
+        };
 
         if (!code || !state || !cookieState || state !== cookieState) {
           return redirectTo("error", "OAuth state mismatch — please try connecting again.");

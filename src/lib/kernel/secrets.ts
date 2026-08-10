@@ -1,16 +1,12 @@
 import crypto from "crypto";
 import { getDb } from "./db";
+import { getSecretManagerKeyBase64 } from "./instance-keys";
 
 const ALGO = "aes-256-gcm";
 const COLLECTION = "secrets";
 
-function getKey(): Buffer {
-  const raw = process.env.SECRET_MANAGER_KEY;
-  if (!raw) {
-    throw new Error(
-      "SECRET_MANAGER_KEY env var is not set. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
-    );
-  }
+async function getKey(): Promise<Buffer> {
+  const raw = await getSecretManagerKeyBase64();
   const key = Buffer.from(raw, "base64");
   if (key.length !== 32) {
     throw new Error("SECRET_MANAGER_KEY must decode to exactly 32 bytes (base64-encoded).");
@@ -32,7 +28,7 @@ interface SecretDoc {
 export async function setSecret(name: string, value: string): Promise<void> {
   const db = await getDb();
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALGO, getKey(), iv);
+  const cipher = crypto.createCipheriv(ALGO, await getKey(), iv);
   const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
   await db.collection<SecretDoc>(COLLECTION).updateOne(
@@ -54,7 +50,7 @@ export async function getSecret(name: string): Promise<string> {
   const db = await getDb();
   const doc = await db.collection<SecretDoc>(COLLECTION).findOne({ name });
   if (!doc) throw new Error(`Secret "${name}" is not set. Configure it in Secret Manager first.`);
-  const decipher = crypto.createDecipheriv(ALGO, getKey(), Buffer.from(doc.iv, "base64"));
+  const decipher = crypto.createDecipheriv(ALGO, await getKey(), Buffer.from(doc.iv, "base64"));
   decipher.setAuthTag(Buffer.from(doc.authTag, "base64"));
   const decrypted = Buffer.concat([decipher.update(Buffer.from(doc.value, "base64")), decipher.final()]);
   return decrypted.toString("utf8");

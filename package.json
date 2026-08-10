@@ -6,11 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup": "tsx scripts/setup/index.ts",
+    "doctor": "tsx scripts/doctor/index.ts",
+    "backup": "tsx scripts/backup/index.ts",
+    "restore": "tsx scripts/restore/index.ts",
+    "reset": "tsx scripts/reset/index.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@huggingface/transformers": "^4.2.0",
+    "adm-zip": "^0.6.0",
+    "bson": "^7.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -33,12 +40,15 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.20",
+    "@types/adm-zip": "^0.5.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "adm-zip": "^0.6.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
+    "tsx": "^4.23.11",
     "typescript": "^5"
   }
 }

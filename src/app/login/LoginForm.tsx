@@ -65,7 +65,15 @@ export function LoginForm() {
         setError(data.error || "Something went wrong.");
         return;
       }
-      router.push(searchParams.get("from") || "/dashboard");
+
+      // A brand-new account always needs the wizard. A returning login only needs it
+      // if a previous setup session was left unfinished (or explicitly reopened).
+      let needsSetup = !hasUser;
+      if (hasUser) {
+        const status = await fetch("/api/auth/status").then((r) => r.json());
+        needsSetup = !status.setupComplete;
+      }
+      router.push(needsSetup ? "/setup" : searchParams.get("from") || "/dashboard");
       router.refresh();
     } finally {
       setSubmitting(false);

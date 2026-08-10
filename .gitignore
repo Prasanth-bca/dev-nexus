@@ -32,9 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
-# File Vault uploads (local disk storage, not committed — see src/modules/file-vault/server/storage.ts)
-/var/file-vault/
+# Local instance data — uploads, temp files, logs, exports, backups (see scripts/shared/paths.ts)
+/var/
 
 # vercel
 .vercel

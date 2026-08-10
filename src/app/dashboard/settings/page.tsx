@@ -4,6 +4,7 @@ import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 import { getUserById } from "@/lib/kernel/auth-password";
 import { PageHeader } from "@/components/page-header";
 import { AccountForm } from "./AccountForm";
+import { ReopenSetupCard } from "./ReopenSetupCard";
 
 export default async function SettingsPage() {
   const userId = await getCurrentUserId();
@@ -22,6 +23,7 @@ export default async function SettingsPage() {
         className="mb-0"
       />
       <AccountForm currentEmail={user.email} />
+      <ReopenSetupCard />
     </div>
   );
 }
