@@ -52,6 +52,13 @@ async function main() {
     info("Uploaded files preserved.");
   }
 
+  // Avatars are tied 1:1 to the admin account being wiped above (not durable content like
+  // File Vault uploads), so they're always removed here regardless of preserveFiles.
+  if (existsSync(STORAGE_DIRS.avatars)) {
+    await rm(STORAGE_DIRS.avatars, { recursive: true, force: true });
+    ok("var/avatars removed");
+  }
+
   blank();
   ok("Reset complete. Run `npm run dev` and open http://localhost:3000 to create a new admin account.");
   blank();

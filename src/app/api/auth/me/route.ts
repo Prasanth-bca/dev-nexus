@@ -8,5 +8,5 @@ export async function GET() {
   const user = await getUserById(userId);
   if (!user) return Response.json({ error: "Not found" }, { status: 404 });
 
-  return Response.json({ email: user.email });
+  return Response.json({ email: user.email, profile: user.profile });
 }

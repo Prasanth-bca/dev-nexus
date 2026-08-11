@@ -38,6 +38,10 @@ async function main() {
   } else {
     info("No File Vault uploads yet");
   }
+  if (existsSync(STORAGE_DIRS.avatars)) {
+    zip.addLocalFolder(STORAGE_DIRS.avatars, "files/avatars");
+    ok("Profile avatars archived");
+  }
 
   step("Archiving configuration…");
   let includesEnv = false;
@@ -53,6 +57,7 @@ async function main() {
     createdAt: new Date().toISOString(),
     collections: collections.map((c) => c.name),
     includesFiles: existsSync(STORAGE_DIRS.fileVault),
+    includesAvatars: existsSync(STORAGE_DIRS.avatars),
     includesEnv,
     warning:
       "This archive can contain encrypted secrets and the key to decrypt them (.env.local) side by side. Store it as securely as you would any other credential.",

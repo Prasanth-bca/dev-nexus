@@ -4,6 +4,7 @@ import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 import { getUserById } from "@/lib/kernel/auth-password";
 import { PageHeader } from "@/components/page-header";
 import { AccountForm } from "./AccountForm";
+import { ProfileForm } from "./ProfileForm";
 import { ReopenSetupCard } from "./ReopenSetupCard";
 
 export default async function SettingsPage() {
@@ -22,6 +23,7 @@ export default async function SettingsPage() {
         accent="var(--muted-foreground)"
         className="mb-0"
       />
+      <ProfileForm initialProfile={user.profile} hasAvatar={Boolean(user.profile.avatarStorageKey)} />
       <AccountForm currentEmail={user.email} />
       <ReopenSetupCard />
     </div>

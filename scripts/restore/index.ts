@@ -13,7 +13,22 @@ interface BackupManifest {
   createdAt: string;
   collections: string[];
   includesFiles: boolean;
+  includesAvatars?: boolean;
   includesEnv: boolean;
+}
+
+/** Per-entry extraction, not extractAllTo — that extracts the WHOLE archive (database/,
+ *  manifest.json, env/ included) into targetPath, which would litter the project root
+ *  with everything else the backup contains. maintainEntryPath=false flattens each file
+ *  directly into targetDir, matching how storage.ts/avatar-storage.ts already store every
+ *  upload as a flat generated-UUID filename. */
+async function restoreFileGroup(zip: AdmZip, entryPrefix: string, targetDir: string, label: string): Promise<void> {
+  await mkdir(targetDir, { recursive: true });
+  const entries = zip.getEntries().filter((e) => !e.isDirectory && e.entryName.startsWith(entryPrefix));
+  for (const entry of entries) {
+    zip.extractEntryTo(entry, targetDir, false, true);
+  }
+  ok(`${label} restored (${entries.length} file${entries.length === 1 ? "" : "s"})`);
 }
 
 async function pickBackupPath(): Promise<string | null> {
@@ -66,6 +81,7 @@ async function main() {
   info(`Created: ${manifest.createdAt}`);
   info(`Collections: ${manifest.collections.join(", ")}`);
   info(`Includes uploaded files: ${manifest.includesFiles ? "yes" : "no"}`);
+  info(`Includes profile avatars: ${manifest.includesAvatars ? "yes" : "no"}`);
   info(`Includes .env.local: ${manifest.includesEnv ? "yes" : "no"}`);
 
   blank();
@@ -115,17 +131,11 @@ async function main() {
 
   if (manifest.includesFiles) {
     step("Restoring uploaded files…");
-    await mkdir(STORAGE_DIRS.fileVault, { recursive: true });
-    // Per-entry extraction, not extractAllTo — that extracts the WHOLE archive (database/,
-    // manifest.json, env/ included) into targetPath, which would litter the project root
-    // with everything else the backup contains. Only the files/file-vault/* entries belong
-    // on disk here; maintainEntryPath=false flattens them directly into STORAGE_DIRS.fileVault,
-    // matching how storage.ts already stores every upload as a flat generated-UUID filename.
-    const fileEntries = zip.getEntries().filter((e) => !e.isDirectory && e.entryName.startsWith("files/file-vault/"));
-    for (const entry of fileEntries) {
-      zip.extractEntryTo(entry, STORAGE_DIRS.fileVault, false, true);
-    }
-    ok(`File Vault uploads restored (${fileEntries.length} file${fileEntries.length === 1 ? "" : "s"})`);
+    await restoreFileGroup(zip, "files/file-vault/", STORAGE_DIRS.fileVault, "File Vault uploads");
+  }
+  if (manifest.includesAvatars) {
+    step("Restoring profile avatars…");
+    await restoreFileGroup(zip, "files/avatars/", STORAGE_DIRS.avatars, "Profile avatars");
   }
 
   blank();

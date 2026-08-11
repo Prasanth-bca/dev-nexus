@@ -8,10 +8,11 @@ export const ENV_EXAMPLE_PATH = path.join(PROJECT_ROOT, ".env.example");
 
 export const VAR_DIR = path.join(PROJECT_ROOT, "var");
 
-/** Mirrors the existing FILE_VAULT_DIR override in src/modules/file-vault/server/storage.ts
- *  so the CLI and the running app always agree on where uploads live. */
+/** Mirrors the existing FILE_VAULT_DIR/AVATAR_DIR overrides in src/modules/file-vault/server/storage.ts
+ *  and src/lib/kernel/avatar-storage.ts, so the CLI and the running app always agree on where files live. */
 export const STORAGE_DIRS = {
   fileVault: process.env.FILE_VAULT_DIR || path.join(VAR_DIR, "file-vault"),
+  avatars: process.env.AVATAR_DIR || path.join(VAR_DIR, "avatars"),
   temp: path.join(VAR_DIR, "temp"),
   logs: path.join(VAR_DIR, "logs"),
   exports: path.join(VAR_DIR, "exports"),
