@@ -6,14 +6,23 @@ import { WifiOff } from "lucide-react";
 /**
  * A slim, fixed banner shown app-wide (mounted in the root layout, so it covers
  * /login and /setup too, not just the dashboard) whenever the browser goes offline.
- * Lazy-initialized from navigator.onLine rather than defaulting to "online" and
- * correcting in an effect, so a page loaded while already offline doesn't flash
- * as online for a moment first.
+ *
+ * Always starts "online" on both server and client, rather than lazy-initializing from
+ * navigator.onLine — Node 21+ ships a partial global `navigator` with no `onLine`
+ * property, so `typeof navigator === "undefined"` is false during SSR while
+ * `navigator.onLine` is also undefined there, making the server render the banner
+ * while a genuinely-online browser doesn't. That mismatch was caught live via a real
+ * hydration error. Starting both sides at "online" keeps the first render identical;
+ * the effect below corrects it to the real value immediately after mount.
  */
 export function OfflineBanner() {
-  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
+  const [online, setOnline] = useState(true);
 
   useEffect(() => {
+    // Deferred like every other mount-time setState in this app (see ActivityView.tsx/
+    // RepoDetail.tsx) — satisfies react-hooks/set-state-in-effect.
+    const timeout = setTimeout(() => setOnline(navigator.onLine), 0);
+
     function goOnline() {
       setOnline(true);
     }
@@ -23,6 +32,7 @@ export function OfflineBanner() {
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
     return () => {
+      clearTimeout(timeout);
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
     };
