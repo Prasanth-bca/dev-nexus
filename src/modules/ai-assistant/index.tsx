@@ -3,7 +3,7 @@ import { formatRelativeTime } from "@/lib/format";
 import { manifest } from "./manifest";
 import { buildRoutes } from "./server/routes";
 import { AiAssistantPage } from "./client/AiAssistantPage";
-import { CONVERSATIONS_COLLECTION, type ConversationDoc } from "./db/collections";
+import { CONVERSATIONS_COLLECTION, PROVIDERS_COLLECTION, type ConversationDoc } from "./db/collections";
 
 export const aiAssistantModule: DevNexusModule = {
   manifest,
@@ -13,6 +13,13 @@ export const aiAssistantModule: DevNexusModule = {
       routes: buildRoutes(ctx),
       pages: [{ path: "/", component: () => <AiAssistantPage ctx={ctx} /> }],
     };
+  },
+
+  async onEnable(ctx) {
+    await ctx.db.collection(CONVERSATIONS_COLLECTION).createIndex({ updatedAt: -1 });
+    // providers().findOne({active:true}) runs on every chat message (see server/routes.ts).
+    await ctx.db.collection(PROVIDERS_COLLECTION).createIndex({ active: 1 });
+    ctx.logger.info("enabled");
   },
 
   async search(ctx, query) {

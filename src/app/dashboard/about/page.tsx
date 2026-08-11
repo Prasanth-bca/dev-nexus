@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Terminal,
 } from "lucide-react";
-import { getModules } from "@/modules/loaded";
+import { getModulesOnce } from "../dashboard-data";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getModuleAccent, getModuleIcon } from "@/lib/icon-map";
@@ -75,7 +75,7 @@ const STACK: { label: string; value: string }[] = [
 ];
 
 export default async function AboutPage() {
-  const loaded = await getModules();
+  const loaded = await getModulesOnce();
   const modules = loaded.filter((m) => m.module.manifest.description);
 
   return (

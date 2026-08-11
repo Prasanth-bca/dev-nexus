@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { getModules } from "@/modules/loaded";
+import { getModulesOnce } from "../dashboard-data";
 
 export default async function ModulePage({ params }: { params: Promise<{ moduleId: string }> }) {
   const { moduleId } = await params;
-  const loaded = await getModules();
+  const loaded = await getModulesOnce();
   const found = loaded.find((m) => m.module.manifest.id === moduleId);
 
   if (!found || !found.enabled) notFound();

@@ -7,17 +7,58 @@ export interface ProjectOption {
   name: string;
 }
 
-/** Fetches the project list once — shared by every module's "Assign Project" control. */
+const CACHE_TTL_MS = 60_000;
+
+/**
+ * Module-level cache shared by every mount of useProjects() across the whole app — Notes'
+ * NoteDetail, File Vault's FilePreviewDialog, and SecretsManager each render their own
+ * "Assign Project" control, and NoteDetail in particular remounts on every note switch and
+ * every edit/preview toggle. Without this, each of those was firing its own independent
+ * `/api/modules/projects` fetch, found live via a performance audit. A short TTL (rather than
+ * caching forever) keeps a newly-created/renamed project from being invisible in already-open
+ * dropdowns for more than a minute, without needing cross-module cache-invalidation plumbing.
+ */
+let cache: { projects: ProjectOption[]; fetchedAt: number } | null = null;
+let inFlight: Promise<ProjectOption[]> | null = null;
+
+function isFresh(): boolean {
+  return cache !== null && Date.now() - cache.fetchedAt < CACHE_TTL_MS;
+}
+
+async function fetchProjects(): Promise<ProjectOption[]> {
+  if (isFresh()) return cache!.projects;
+  if (inFlight) return inFlight;
+
+  inFlight = fetch("/api/modules/projects")
+    .then((res) => (res.ok ? res.json() : []))
+    .then((data) => {
+      const projects: ProjectOption[] = Array.isArray(data)
+        ? data.map((p: { _id: string; name: string }) => ({ _id: p._id, name: p.name }))
+        : [];
+      cache = { projects, fetchedAt: Date.now() };
+      return projects;
+    })
+    .catch(() => [])
+    .finally(() => {
+      inFlight = null;
+    });
+  return inFlight;
+}
+
+/** Shared by every module's "Assign Project" control — see the module-level cache above. */
 export function useProjects(): ProjectOption[] {
-  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>(() => (isFresh() ? cache!.projects : []));
+
   useEffect(() => {
-    fetch("/api/modules/projects")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) =>
-        setProjects(Array.isArray(data) ? data.map((p: { _id: string; name: string }) => ({ _id: p._id, name: p.name })) : [])
-      )
-      .catch(() => setProjects([]));
+    let cancelled = false;
+    fetchProjects().then((result) => {
+      if (!cancelled) setProjects(result);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
   return projects;
 }
 

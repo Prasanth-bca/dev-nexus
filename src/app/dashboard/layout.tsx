@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
-import { getModules } from "@/modules/loaded";
+import { getModulesOnce } from "./dashboard-data";
 import { Sidebar, type NavLink } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const loaded = await getModules();
+  // getModulesOnce (not the raw getModules()) so this shares its one-per-request cache
+  // with the page/route inside {children} — see the comment on getModulesOnce itself.
+  const loaded = await getModulesOnce();
 
   const moduleLinks: NavLink[] = loaded
     .filter((m) => m.enabled && m.module.manifest.navEntry)

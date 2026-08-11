@@ -18,6 +18,8 @@ export const notesModule: DevNexusModule = {
 
   async onEnable(ctx) {
     await ctx.db.collection(NOTES_COLLECTION).createIndex({ pinned: -1, updatedAt: -1 });
+    // GET / filters by projectId when a project is selected — sparse since most notes aren't assigned to one.
+    await ctx.db.collection(NOTES_COLLECTION).createIndex({ projectId: 1 }, { sparse: true });
     // Kicks off the embedding model's (one-time) download/load in the background at server
     // start, so a user's first Semantic Search isn't the request that pays for it.
     warmUpEmbeddings();
@@ -31,7 +33,14 @@ export const notesModule: DevNexusModule = {
 
   async search(ctx, query) {
     const q = query.toLowerCase();
-    const notes = await ctx.db.collection<NoteDoc>(NOTES_COLLECTION).find({}).limit(200).toArray();
+    // Projected — title/content/tags are all this substring-matches or returns; excluding
+    // embedding (a large float array) and the other unused fields cuts what Command Palette
+    // pulls into memory on every keystroke query.
+    const notes = await ctx.db
+      .collection<NoteDoc>(NOTES_COLLECTION)
+      .find({}, { projection: { title: 1, content: 1, tags: 1 } })
+      .limit(200)
+      .toArray();
     return notes
       .filter((n) => `${n.title} ${n.content} ${n.tags.join(" ")}`.toLowerCase().includes(q))
       .slice(0, 8)

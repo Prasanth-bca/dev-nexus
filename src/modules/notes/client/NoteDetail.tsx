@@ -1,16 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Check, Download, Maximize2, Minimize2, Pencil, Pin, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProjectSelect, useProjects } from "@/components/project-select";
 import { CATEGORIES, TEMPLATES } from "../constants";
 import { MarkdownEditor } from "./MarkdownEditor";
-import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestButton } from "./SuggestButton";
 import { SummaryPanel } from "./SummaryPanel";
 import { RelatedNotesPanel } from "./RelatedNotesPanel";
+
+/**
+ * Lazy-loaded — MarkdownPreview pulls in react-markdown/remark-gfm/rehype-highlight plus a
+ * highlight.js stylesheet, which a performance audit found were shipping in Notes' initial
+ * JS chunk even before any note was ever opened in preview mode. This defers that weight to
+ * first actual use instead, with no change to what renders once it loads.
+ */
+const MarkdownPreview = dynamic(() => import("./MarkdownPreview").then((m) => m.MarkdownPreview), {
+  loading: () => <div className="h-24 w-full animate-pulse rounded-lg bg-foreground/[0.04] dark:bg-white/[0.05]" />,
+});
 
 const ACCENT = "var(--module-notes)";
 

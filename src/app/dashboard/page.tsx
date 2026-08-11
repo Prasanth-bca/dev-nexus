@@ -3,8 +3,14 @@ import Link from "next/link";
 import { FolderGit2, FolderKanban, KeyRound, LayoutGrid, Mail, MessageSquarePlus, Plus, Upload, Vault } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getModules } from "@/modules/loaded";
-import { getEnabledModuleCount, getGreetingName, getModuleStatValue, getSecretCount, timeOfDayGreeting } from "./dashboard-data";
+import {
+  getEnabledModuleCount,
+  getGreetingName,
+  getModuleStatValue,
+  getModulesOnce,
+  getSecretCount,
+  timeOfDayGreeting,
+} from "./dashboard-data";
 import { HeroStat, HeroStatSkeleton } from "./HeroStat";
 import { ModuleWidgetSlot, WidgetCardSkeleton } from "./ModuleWidgetSlot";
 
@@ -34,7 +40,7 @@ const GRID_SPANS: Record<string, string> = {
 const DEFAULT_SPAN = "col-span-12 md:col-span-6 lg:col-span-4";
 
 export default async function DashboardHome() {
-  const loaded = await getModules();
+  const loaded = await getModulesOnce();
   const moduleIds = loaded.filter((m) => m.enabled && m.module.widget).map((m) => m.module.manifest.id);
   const [name, greeting] = [await getGreetingName(), timeOfDayGreeting()];
 

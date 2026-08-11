@@ -1,16 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { MessageSquare, Plug, Sparkles, Wrench } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getModuleAccent } from "@/lib/icon-map";
 import { PROVIDER_LABELS, type ProviderDTO } from "../db/collections";
 import { ChatView } from "./ChatView";
-import { ProvidersView } from "./ProvidersView";
-import { ToolSettingsView } from "./ToolSettingsView";
 
 const ACCENT = getModuleAccent("ai-assistant");
+
+// Chat is the default/most-visited tab, so it stays a static import — deferring it would add
+// a loading flicker to the common path. Providers/Tools are secondary settings screens,
+// visited less often, so a performance audit's suggestion to lazy-load them (rather than
+// shipping their code in the initial AI Assistant bundle regardless of which tab is opened)
+// applies to these two instead.
+const TAB_LOADING = <Skeleton className="h-40 w-full rounded-xl" />;
+const ProvidersView = dynamic(() => import("./ProvidersView").then((m) => m.ProvidersView), { loading: () => TAB_LOADING });
+const ToolSettingsView = dynamic(() => import("./ToolSettingsView").then((m) => m.ToolSettingsView), { loading: () => TAB_LOADING });
 
 /** Accent-tinted pill naming the provider/model every chat turn is routed through. */
 function ProviderBadge({ provider }: { provider: ProviderDTO }) {

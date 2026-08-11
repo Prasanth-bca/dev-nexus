@@ -53,6 +53,9 @@ export const activityModule: DevNexusModule = {
 
   async onEnable(ctx) {
     await ctx.db.collection(ACTIVITY_COLLECTION).createIndex({ timestamp: -1 });
+    // Projects' overview/activity tabs filter by payload.id (via $in) to cross-reference which
+    // events belong to a project's notes/files — sparse since most event types have no payload.id.
+    await ctx.db.collection(ACTIVITY_COLLECTION).createIndex({ "payload.id": 1 }, { sparse: true });
 
     // The event bus is a process-wide singleton, but onEnable re-runs on every request in dev
     // (loader.ts rebuilds module registration each call) — without this guard, dev mode would

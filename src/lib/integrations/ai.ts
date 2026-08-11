@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/kernel/db";
 import { getSecret } from "@/lib/kernel/secrets";
+import { EXTERNAL_FETCH_TIMEOUT_MS } from "@/lib/fetch-timeout";
 
 /**
  * Single-turn text completion using whichever AI provider is active in the AI Assistant module.
@@ -30,6 +31,7 @@ async function callAnthropic(apiKey: string, model: string, system: string, user
     method: "POST",
     headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({ model, max_tokens: 1024, system, messages: [{ role: "user", content: user }] }),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Anthropic API error (${res.status}): ${(await res.text()).slice(0, 300)}`);
   const data = await res.json();
@@ -42,6 +44,7 @@ async function callOpenAiCompatible(baseUrl: string, apiKey: string, model: stri
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
     body: JSON.stringify({ model, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`AI provider request failed (${res.status}): ${(await res.text()).slice(0, 300)}`);
   const data = await res.json();

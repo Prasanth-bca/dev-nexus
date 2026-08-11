@@ -17,6 +17,10 @@ export const fileVaultModule: DevNexusModule = {
 
   async onEnable(ctx) {
     await ctx.db.collection(FILE_VAULT_COLLECTION).createIndex({ uploadedAt: -1 });
+    // GET /files filters by category and (when set) projectId — projectId sparse since most
+    // files aren't assigned to one.
+    await ctx.db.collection(FILE_VAULT_COLLECTION).createIndex({ category: 1 });
+    await ctx.db.collection(FILE_VAULT_COLLECTION).createIndex({ projectId: 1 }, { sparse: true });
     ctx.logger.info("enabled");
   },
 
@@ -27,7 +31,11 @@ export const fileVaultModule: DevNexusModule = {
 
   async search(ctx, query) {
     const q = query.toLowerCase();
-    const files = await ctx.db.collection<FileVaultDoc>(FILE_VAULT_COLLECTION).find({}).limit(200).toArray();
+    const files = await ctx.db
+      .collection<FileVaultDoc>(FILE_VAULT_COLLECTION)
+      .find({}, { projection: { filename: 1, size: 1 } })
+      .limit(200)
+      .toArray();
     return files
       .filter((f) => f.filename.toLowerCase().includes(q))
       .slice(0, 8)

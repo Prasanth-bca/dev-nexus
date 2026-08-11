@@ -1,4 +1,5 @@
 import { getSecret } from "@/lib/kernel/secrets";
+import { EXTERNAL_FETCH_TIMEOUT_MS } from "@/lib/fetch-timeout";
 
 /**
  * Shared GitHub API client — lives here (not inside the `github` module) so other modules could
@@ -18,6 +19,7 @@ async function githubFetch<T>(path: string): Promise<T> {
   const token = await getSecret("GITHUB_TOKEN");
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { ...API_HEADERS, Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as GithubApiError;
@@ -37,7 +39,10 @@ async function githubFetch<T>(path: string): Promise<T> {
  * token's access as a scope list because GitHub doesn't expose one.
  */
 export async function verifyToken(token: string): Promise<{ login: string; scopes: string[] }> {
-  const res = await fetch(`${API_BASE}/user`, { headers: { ...API_HEADERS, Authorization: `Bearer ${token}` } });
+  const res = await fetch(`${API_BASE}/user`, {
+    headers: { ...API_HEADERS, Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(res.status === 401 ? "Invalid GitHub token." : `GitHub API error (${res.status}).`);
   const data = await res.json();
   const scopesHeader = res.headers.get("x-oauth-scopes");

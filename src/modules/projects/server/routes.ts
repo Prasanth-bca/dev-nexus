@@ -320,7 +320,9 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         if (isPriority(priority)) filter.priority = priority;
         if (tag) filter.tags = tag;
 
-        let docs = await projects().find(filter).sort({ updatedAt: -1 }).toArray();
+        // Defensive ceiling, not real pagination — no "load more" UI exists client-side, so
+        // this is set far above any realistic personal project count.
+        let docs = await projects().find(filter).sort({ updatedAt: -1 }).limit(1000).toArray();
         if (q) {
           docs = docs.filter((p) => `${p.name} ${p.description} ${p.tags.join(" ")} ${p.techStack.join(" ")}`.toLowerCase().includes(q));
         }

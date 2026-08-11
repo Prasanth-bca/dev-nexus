@@ -1,4 +1,5 @@
 import type { ProviderType } from "../db/collections";
+import { EXTERNAL_FETCH_TIMEOUT_MS } from "@/lib/fetch-timeout";
 
 export interface ToolDef {
   name: string;
@@ -62,6 +63,7 @@ async function callAnthropic({ apiKey, model, systemPrompt, history, tools }: Ca
       messages: buildAnthropicMessages(history),
       tools: tools.length ? tools.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters })) : undefined,
     }),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Anthropic API error (${res.status}): ${await res.text()}`);
   const data = await res.json();
@@ -127,6 +129,7 @@ async function requestOpenAi(
         ? tools.map((t) => ({ type: "function", function: { name: t.name, description: t.description, parameters: t.parameters } }))
         : undefined,
     }),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
 
   if (res.ok) return { ok: true, data: await res.json() };

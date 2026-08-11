@@ -1,4 +1,5 @@
 import { getSecret } from "@/lib/kernel/secrets";
+import { EXTERNAL_FETCH_TIMEOUT_MS } from "@/lib/fetch-timeout";
 
 /**
  * Shared Gmail API client — lives here (not inside the `gmail` module) so it can be used by
@@ -37,6 +38,7 @@ async function refreshAccessToken(): Promise<{ value: string; expiresAt: number 
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     }),
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Gmail token refresh failed (${res.status}): ${await res.text()}`);
   const data = await res.json();
@@ -70,6 +72,7 @@ async function gmailFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: { ...(init?.headers || {}), Authorization: `Bearer ${token}`, "content-type": "application/json" },
+    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as GmailApiError;

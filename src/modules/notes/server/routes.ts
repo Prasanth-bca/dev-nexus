@@ -39,9 +39,12 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const projectId = new URL(req.url).searchParams.get("projectId");
         const filter: Record<string, unknown> = {};
         if (projectId) filter.projectId = projectId;
+        // A defensive ceiling, not real pagination — the client has no "load more" UI, so this
+        // is set far above any realistic personal note count rather than a true page size.
         const items = await collection()
           .find(filter, { projection: { embedding: 0 } })
           .sort({ pinned: -1, updatedAt: -1 })
+          .limit(1000)
           .toArray();
         return Response.json(items);
       },
@@ -214,8 +217,11 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
           return Response.json({ error: err instanceof Error ? err.message : "Embedding request failed." }, { status: 502 });
         }
 
+        // Projected to skip fields unused by scoring/display below — every note with an
+        // embedding still has to be fetched to be scored (no vector index to pre-filter with),
+        // so this trims per-document payload rather than the candidate set itself.
         const notes = await collection()
-          .find({ embedding: { $exists: true, $ne: [] } })
+          .find({ embedding: { $exists: true, $ne: [] } }, { projection: { title: 1, content: 1, embedding: 1 } })
           .toArray();
 
         const results: SemanticSearchResult[] = notes

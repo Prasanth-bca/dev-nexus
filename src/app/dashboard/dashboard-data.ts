@@ -10,9 +10,11 @@ import type { DashboardWidget } from "@/lib/kernel/types";
  * loader.ts — rebuilding every module's context and re-running onEnable. Calling
  * getModules() once per widget instead of once per request would multiply that cost by
  * the module count on every Dashboard load. cache() pins it to one call per request no
- * matter how many components ask for it.
+ * matter how many components ask for it — and since cache() dedupes by function identity,
+ * every /dashboard/* page and the layout that wraps them all must import THIS wrapper
+ * (not the raw getModules()) for that sharing to actually happen across the request.
  */
-const getModulesOnce = cache(getModules);
+export const getModulesOnce = cache(getModules);
 
 export interface ModuleWidgetData {
   moduleId: string;

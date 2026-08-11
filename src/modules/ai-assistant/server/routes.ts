@@ -287,7 +287,13 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       method: "GET",
       path: "/conversations",
       handler: async () => {
-        const docs = await conversations().find().sort({ updatedAt: -1 }).toArray();
+        // Projected to skip fetching every conversation's full messages[] history just to list
+        // titles; limit is a defensive ceiling (no "load more" UI exists), not real pagination.
+        const docs = await conversations()
+          .find({}, { projection: { title: 1, updatedAt: 1 } })
+          .sort({ updatedAt: -1 })
+          .limit(1000)
+          .toArray();
         return Response.json(docs.map((d) => ({ id: d._id.toString(), title: d.title, updatedAt: d.updatedAt.toISOString() })));
       },
     },

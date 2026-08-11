@@ -28,7 +28,9 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         if (q) filter.filename = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
         if (projectId) filter.projectId = projectId;
 
-        const docs = await collection().find(filter).sort({ uploadedAt: -1 }).toArray();
+        // Defensive ceiling, not real pagination — no "load more" UI exists client-side, so
+        // this is set far above any realistic personal file count.
+        const docs = await collection().find(filter).sort({ uploadedAt: -1 }).limit(1000).toArray();
         return Response.json(docs.map((d) => toDTO(d._id.toString(), d)));
       },
     },
@@ -81,6 +83,10 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
               "Content-Type": doc.mimeType,
               "Content-Disposition": `inline; filename="${doc.filename.replace(/"/g, "")}"`,
               "Content-Length": String(doc.size),
+              // Matches the avatar route's precedent — auth-gated content, so private, and
+              // storage keys are fresh UUIDs never reused/mutated in place, so this is safe
+              // to cache without a revalidation risk.
+              "Cache-Control": "private, max-age=300",
             },
           });
         } catch {
