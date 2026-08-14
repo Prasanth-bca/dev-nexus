@@ -42,6 +42,9 @@ export interface StoredMessage {
   toolCallId?: string;
   toolName?: string;
   toolArguments?: Record<string, unknown>;
+  /** The provider's original tool_calls[] element, when there was one — see Turn["assistant_tool_call"].raw
+   *  in server/providers.ts for why (Gemini's thought_signature must round-trip verbatim). */
+  toolCallRaw?: Record<string, unknown>;
   createdAt: Date;
 }
 

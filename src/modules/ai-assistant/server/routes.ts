@@ -69,7 +69,13 @@ function storedToTurns(messages: StoredMessage[]): Turn[] {
       case "assistant":
         return { role: "assistant", content: m.content ?? "" };
       case "assistant_tool_call":
-        return { role: "assistant_tool_call", id: m.toolCallId ?? "", name: m.toolName ?? "", arguments: m.toolArguments ?? {} };
+        return {
+          role: "assistant_tool_call",
+          id: m.toolCallId ?? "",
+          name: m.toolName ?? "",
+          arguments: m.toolArguments ?? {},
+          raw: m.toolCallRaw,
+        };
       case "tool_result":
         return { role: "tool_result", id: m.toolCallId ?? "", content: m.content ?? "" };
     }
@@ -84,7 +90,14 @@ function turnToStored(turn: Turn): StoredMessage {
     case "assistant":
       return { role: "assistant", content: turn.content, createdAt };
     case "assistant_tool_call":
-      return { role: "assistant_tool_call", toolCallId: turn.id, toolName: turn.name, toolArguments: turn.arguments, createdAt };
+      return {
+        role: "assistant_tool_call",
+        toolCallId: turn.id,
+        toolName: turn.name,
+        toolArguments: turn.arguments,
+        toolCallRaw: turn.raw,
+        createdAt,
+      };
     case "tool_result":
       return { role: "tool_result", toolCallId: turn.id, content: turn.content, createdAt };
   }
@@ -138,7 +151,13 @@ async function runAssistantLoop(
       return { status: "text", text: result.text, turns };
     }
 
-    const callTurn: Turn = { role: "assistant_tool_call", id: result.id, name: result.name, arguments: result.arguments };
+    const callTurn: Turn = {
+      role: "assistant_tool_call",
+      id: result.id,
+      name: result.name,
+      arguments: result.arguments,
+      raw: result.raw,
+    };
     history.push(callTurn);
     turns.push(callTurn);
 

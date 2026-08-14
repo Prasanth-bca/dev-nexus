@@ -15,12 +15,28 @@ export interface ToolDef {
 export type Turn =
   | { role: "user"; content: string }
   | { role: "assistant"; content: string }
-  | { role: "assistant_tool_call"; id: string; name: string; arguments: Record<string, unknown> }
+  | {
+      role: "assistant_tool_call";
+      id: string;
+      name: string;
+      arguments: Record<string, unknown>;
+      /**
+       * The exact tool_calls[] element as returned by an OpenAI-compatible provider, kept
+       * verbatim (not just {id, name, arguments}) so provider-specific extra fields survive
+       * the round trip when this turn is echoed back in a later request. Concretely: Gemini's
+       * "thinking" models (via their OpenAI-compatible endpoint) attach an
+       * extra_content.google.thought_signature that MUST be sent back unmodified on the next
+       * turn, or the API rejects the request with "Function call is missing a
+       * thought_signature" — found live via a real chat error. Anthropic/plain OpenAI/Groq
+       * don't need this, so it's undefined for those.
+       */
+      raw?: Record<string, unknown>;
+    }
   | { role: "tool_result"; id: string; content: string };
 
 export type ProviderResult =
   | { type: "text"; text: string }
-  | { type: "tool_call"; id: string; name: string; arguments: Record<string, unknown> };
+  | { type: "tool_call"; id: string; name: string; arguments: Record<string, unknown>; raw?: Record<string, unknown> };
 
 interface CallInput {
   apiKey: string;
@@ -90,10 +106,17 @@ function buildOpenAiMessages(systemPrompt: string, history: Turn[]) {
         messages.push({ role: "assistant", content: turn.content });
         break;
       case "assistant_tool_call":
+        // Echo the exact tool_calls[] element the provider returned when we have it (turn.raw),
+        // rather than reconstructing a minimal {id, function} — that's what preserves Gemini's
+        // extra_content.google.thought_signature across the round trip. Falls back to a
+        // reconstructed one for turns that never had a raw form (e.g. Groq's malformed-tool-call
+        // recovery path below, which invents a call that was never actually returned this way).
         messages.push({
           role: "assistant",
           content: null,
-          tool_calls: [{ id: turn.id, type: "function", function: { name: turn.name, arguments: JSON.stringify(turn.arguments) } }],
+          tool_calls: [
+            turn.raw ?? { id: turn.id, type: "function", function: { name: turn.name, arguments: JSON.stringify(turn.arguments) } },
+          ],
         });
         break;
       case "tool_result":
@@ -104,8 +127,13 @@ function buildOpenAiMessages(systemPrompt: string, history: Turn[]) {
   return messages;
 }
 
+/** `& Record<string, unknown>` on the tool_calls element — not just {id, function} — so provider-
+ *  specific extra fields (e.g. Gemini's extra_content) are typed as present and survive being
+ *  captured into ProviderResult.raw further down, instead of being stripped by the type. */
+type OpenAiToolCall = { id: string; function: { name: string; arguments: string } } & Record<string, unknown>;
+
 type OpenAiRequestResult =
-  | { ok: true; data: { choices?: Array<{ message?: { content?: string; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> } }> } }
+  | { ok: true; data: { choices?: Array<{ message?: { content?: string; tool_calls?: OpenAiToolCall[] } }> } }
   | { ok: false; status: number; bodyText: string; code?: string; failedGeneration?: string };
 
 async function requestOpenAi(
@@ -171,7 +199,7 @@ function recoverToolCallFromFailedGeneration(
   }
 }
 
-function toProviderResult(message?: { content?: string; tool_calls?: Array<{ id: string; function: { name: string; arguments: string } }> }): ProviderResult {
+function toProviderResult(message?: { content?: string; tool_calls?: OpenAiToolCall[] }): ProviderResult {
   const toolCall = message?.tool_calls?.[0];
   if (toolCall) {
     let args: Record<string, unknown> = {};
@@ -180,7 +208,9 @@ function toProviderResult(message?: { content?: string; tool_calls?: Array<{ id:
     } catch {
       // leave args empty if the model produced malformed JSON — the tool handler will just see no args
     }
-    return { type: "tool_call", id: toolCall.id, name: toolCall.function.name, arguments: args };
+    // raw: toolCall keeps the whole element (id/type/function/any extra provider fields) so it
+    // can be echoed back verbatim later — see the Turn["assistant_tool_call"].raw doc comment.
+    return { type: "tool_call", id: toolCall.id, name: toolCall.function.name, arguments: args, raw: toolCall };
   }
   return { type: "text", text: message?.content ?? "" };
 }
