@@ -5,6 +5,17 @@ import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 import { getUserById } from "@/lib/kernel/auth-password";
 import type { DashboardWidget } from "@/lib/kernel/types";
 
+/** Serializable only — icon *names* and module ids cross the server/client boundary,
+ *  never the Lucide components themselves (functions can't be passed as props). */
+export interface NavLink {
+  label: string;
+  path: string;
+  iconName?: string;
+  moduleId: string;
+  /** One-sentence summary from the module's manifest — used by the Apps Launcher tile tooltip. */
+  description?: string;
+}
+
 /**
  * getLoadedModules() reruns the ENTIRE module pipeline on every call in dev mode — see
  * loader.ts — rebuilding every module's context and re-running onEnable. Calling
@@ -59,14 +70,18 @@ export async function getModuleStatValue(moduleId: string): Promise<number> {
 }
 
 /**
- * First name for the hero greeting, derived from the account email — never hardcoded.
- * Takes only the leading run of letters from the local part, so an address like
- * "prasanth.e390@gmail.com" greets "Prasanth" rather than "Prasanth.e390".
+ * First name for the hero greeting. Prefers the profile's display name (Settings → Profile)
+ * so editing it there is reflected here immediately; falls back to a name derived from the
+ * account email — e.g. "prasanth.e390@gmail.com" greets "Prasanth" — only when no display
+ * name has been set.
  */
 export const getGreetingName = cache(async (): Promise<string> => {
   const userId = await getCurrentUserId();
   if (!userId) return "there";
   const user = await getUserById(userId);
+  const displayName = user?.profile.displayName?.trim();
+  if (displayName) return displayName.split(/\s+/)[0];
+
   const local = user?.email?.split("@")[0] ?? "";
   const name = /^[a-z]+/i.exec(local)?.[0];
   if (!name) return "there";

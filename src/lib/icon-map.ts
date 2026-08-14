@@ -2,6 +2,7 @@ import {
   FolderGit2,
   FolderKanban,
   History,
+  Info,
   LayoutGrid,
   Mail,
   Settings,
@@ -31,6 +32,7 @@ const ICONS: Record<string, LucideIcon> = {
   Link2,
   Users,
   Server,
+  Info,
 };
 
 export function getModuleIcon(name?: string): LucideIcon {
