@@ -248,7 +248,12 @@ function MeetingCard({
           </span>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-medium">{meeting.title}</span>
-            <span className="text-[11px] text-muted-foreground">{formattedDate}</span>
+            {/* suppressHydrationWarning: toLocaleDateString(undefined, ...) formats using
+                whichever locale the runtime environment reports, which can legitimately
+                differ between the server process and the browser. */}
+            <span className="text-[11px] text-muted-foreground" suppressHydrationWarning>
+              {formattedDate}
+            </span>
           </div>
         </div>
         <button
@@ -409,7 +414,10 @@ export function MeetingsTab({ project }: Props) {
         </div>
       )}
 
-      <MeetingFormDialog open={dialogOpen} onOpenChange={setDialogOpen} meeting={editing} onSubmit={handleSubmit} />
+      {/* key forces a clean remount when switching which meeting is being edited (or to
+          create-mode) — without it, the dialog briefly showed the previous meeting's data in
+          what should be a blank form, since its internal state only resyncs a tick later. */}
+      <MeetingFormDialog key={editing?._id ?? "new"} open={dialogOpen} onOpenChange={setDialogOpen} meeting={editing} onSubmit={handleSubmit} />
 
       <ConfirmDialog
         open={deleteId !== null}

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createAdminUser } from "@/lib/kernel/auth-password";
-import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/kernel/auth-session";
+import { createSessionToken, isSecureRequest, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "@/lib/kernel/auth-session";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}) as Record<string, unknown>);
@@ -23,7 +23,13 @@ export async function POST(req: Request) {
 
   const token = await createSessionToken(userId);
   const jar = await cookies();
-  jar.set(SESSION_COOKIE_NAME, token, { httpOnly: true, sameSite: "lax", path: "/", maxAge: SESSION_MAX_AGE_SECONDS });
+  jar.set(SESSION_COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isSecureRequest(req),
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  });
 
   return Response.json({ ok: true });
 }

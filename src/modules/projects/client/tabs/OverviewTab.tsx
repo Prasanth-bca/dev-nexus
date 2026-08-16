@@ -148,16 +148,23 @@ export function OverviewTab({ project }: Props) {
 
       {(project.startDate || project.targetDate) && (
         <div className="grid gap-4 sm:grid-cols-2">
+          {/* suppressHydrationWarning on both: toLocaleDateString() with no explicit locale
+              formats using whichever locale the runtime environment reports, which can
+              legitimately differ between the server process and the browser. */}
           {project.startDate && (
             <div className="glass rounded-xl p-4">
               <h3 className="mb-1 text-sm font-medium">Start Date</h3>
-              <p className="text-sm text-muted-foreground">{new Date(project.startDate).toLocaleDateString()}</p>
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {new Date(project.startDate).toLocaleDateString()}
+              </p>
             </div>
           )}
           {project.targetDate && (
             <div className="glass rounded-xl p-4">
               <h3 className="mb-1 text-sm font-medium">Target Date</h3>
-              <p className="text-sm text-muted-foreground">{new Date(project.targetDate).toLocaleDateString()}</p>
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {new Date(project.targetDate).toLocaleDateString()}
+              </p>
             </div>
           )}
         </div>
@@ -176,7 +183,9 @@ export function OverviewTab({ project }: Props) {
               const row = (
                 <div className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm transition-colors duration-200 hover:bg-foreground/[0.04] dark:hover:bg-white/[0.05]">
                   <span className="min-w-0 flex-1 truncate">{event.summary}</span>
-                  <span className="shrink-0 text-[11px] text-muted-foreground">{formatRelativeTime(event.timestamp)}</span>
+                  <span className="shrink-0 text-[11px] text-muted-foreground" suppressHydrationWarning>
+                    {formatRelativeTime(event.timestamp)}
+                  </span>
                 </div>
               );
               return event.href ? (

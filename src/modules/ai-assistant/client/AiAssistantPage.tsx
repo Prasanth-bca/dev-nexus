@@ -25,7 +25,10 @@ function AssistantSkeleton() {
 }
 
 export async function AiAssistantPage({ ctx }: { ctx: ModuleContext }) {
-  const docs = await ctx.db.collection<ProviderDoc>(PROVIDERS_COLLECTION).find().sort({ provider: 1 }).toArray();
+  // Defensive ceiling, not real pagination — one document per provider *type* (a handful,
+  // ever), never per user-created entity, so this is set far above any realistic count.
+  // Added here and to the sibling GET /providers route (server/routes.ts) for consistency.
+  const docs = await ctx.db.collection<ProviderDoc>(PROVIDERS_COLLECTION).find().sort({ provider: 1 }).limit(50).toArray();
 
   const providers: ProviderDTO[] = docs.map((d) => ({
     provider: d.provider,

@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import type { ModuleContext } from "@/lib/kernel/context";
 import type { RouteDefinition } from "@/lib/kernel/types";
 import { setSecret, deleteSecret } from "@/lib/kernel/secrets";
+import { isDuplicateKeyError } from "@/lib/kernel/mongo-errors";
 import {
   PROVIDERS_COLLECTION,
   PROVIDER_LABELS,
@@ -210,7 +211,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
     {
       method: "GET",
       path: "/providers",
-      handler: async () => Response.json((await providers().find().sort({ provider: 1 }).toArray()).map(toProviderDTO)),
+      handler: async () => Response.json((await providers().find().sort({ provider: 1 }).limit(50).toArray()).map(toProviderDTO)),
     },
     {
       method: "POST",
@@ -234,12 +235,25 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const secretName = secretNameFor(provider);
         await setSecret(secretName, apiKey);
 
-        const existingActive = await providers().findOne({ active: true });
         await providers().updateOne(
           { provider },
-          { $set: { provider, model, secretName, baseUrl, updatedAt: new Date() }, $setOnInsert: { active: !existingActive } },
+          { $set: { provider, model, secretName, baseUrl, updatedAt: new Date() }, $setOnInsert: { active: false } },
           { upsert: true }
         );
+
+        // Convenience: if nothing is active yet, make this the active provider. This read-
+        // then-write is still technically racy against another concurrent add, but the partial
+        // unique index on {active:true} (see index.tsx's onEnable) makes the *consequence*
+        // harmless instead of corrupting — whichever update commits first wins, and the loser
+        // just throws a duplicate-key error we ignore, leaving exactly one provider active
+        // rather than two.
+        if ((await providers().countDocuments({ active: true })) === 0) {
+          try {
+            await providers().updateOne({ provider }, { $set: { active: true } });
+          } catch (err) {
+            if (!isDuplicateKeyError(err)) throw err;
+          }
+        }
 
         return Response.json({ ok: true }, { status: 201 });
       },
@@ -252,7 +266,9 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const exists = await providers().findOne({ provider });
         if (!exists) return Response.json({ error: "Provider is not configured yet." }, { status: 404 });
 
-        await providers().updateMany({}, { $set: { active: false } });
+        // Deactivate every *other* provider first (not the target) — clearing the target too
+        // and setting it again separately would risk a brief moment where nothing is active.
+        await providers().updateMany({ provider: { $ne: provider } }, { $set: { active: false } });
         await providers().updateOne({ provider }, { $set: { active: true } });
         return Response.json({ ok: true });
       },
@@ -434,8 +450,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         }
 
         try {
-          const apiKey = await ctx.secrets.get(active.secretName);
-          const confirmRequired = await confirmRequiredFn();
+          const [apiKey, confirmRequired] = await Promise.all([ctx.secrets.get(active.secretName), confirmRequiredFn()]);
 
           const userTurn: Turn = { role: "user", content: userMessage };
           const baseHistory = [...storedToTurns(conversation.messages), userTurn];
@@ -476,8 +491,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         }
 
         try {
-          const apiKey = await ctx.secrets.get(active.secretName);
-          const confirmRequired = await confirmRequiredFn();
+          const [apiKey, confirmRequired] = await Promise.all([ctx.secrets.get(active.secretName), confirmRequiredFn()]);
 
           const resultContent = approve
             ? await runTool(ctx, pending.toolName ?? "", pending.toolArguments ?? {})

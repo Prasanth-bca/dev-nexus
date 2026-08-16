@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { FileCard } from "./FileCard";
 import { FilePreviewDialog } from "./FilePreviewDialog";
 import type { FileCategory, VaultFile } from "./types";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 
 const CATEGORIES: { value: FileCategory | "all"; label: string; icon: LucideIcon }[] = [
   { value: "all", label: "All", icon: Files },
@@ -64,23 +65,49 @@ export function FileVaultView() {
   // itself comes from the list fetch below, so no separate detail request is needed.
   const [previewId, setPreviewId] = useState<string | null>(() => searchParams.get("open"));
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const listGuard = useRequestGuard();
 
   useEffect(() => {
     const timeout = setTimeout(
       () => {
         setLoading(true);
+        const token = listGuard.start();
         const params = new URLSearchParams();
         if (query.trim()) params.set("q", query.trim());
         if (category !== "all") params.set("category", category);
         fetch(`/api/modules/file-vault/files?${params.toString()}`)
           .then((res) => res.json())
-          .then((data) => setFiles(Array.isArray(data) ? data : []))
-          .finally(() => setLoading(false));
+          .then((data) => {
+            // A search/filter change fired a newer request while this one was still in
+            // flight — applying this response now would show results for the old query.
+            if (listGuard.isCurrent(token)) setFiles(Array.isArray(data) ? data : []);
+          })
+          .finally(() => {
+            if (listGuard.isCurrent(token)) setLoading(false);
+          });
       },
       query ? 300 : 0
     );
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, category]);
+
+  // Deep-link support (e.g. from Global Search / Command Palette): open whatever ?open=
+  // currently points at, even if it changes while already on this page (not just on first load).
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (!openId) return;
+    const timeout = setTimeout(() => setPreviewId(openId), 0);
+    return () => clearTimeout(timeout);
+  }, [searchParams]);
+
+  /** Whether an uploaded file belongs in the currently-filtered view — mirrors the server's
+   *  category/filename filtering closely enough to decide whether to show it immediately. */
+  function matchesActiveFilter(file: VaultFile): boolean {
+    if (category !== "all" && file.category !== category) return false;
+    if (query.trim() && !file.filename.toLowerCase().includes(query.trim().toLowerCase())) return false;
+    return true;
+  }
 
   /** The single upload path — the file input and the drop zone both call this. */
   function uploadFile(file: File) {
@@ -95,7 +122,12 @@ export function FileVaultView() {
           toast.error(data.error || "Upload failed.");
           return;
         }
-        setFiles((prev) => (prev ? [data, ...prev] : [data]));
+        // Filtered to "Images" and uploading a PDF shouldn't make it appear in that view —
+        // it'll show up once the filter no longer excludes it.
+        setFiles((prev) => {
+          if (!matchesActiveFilter(data)) return prev;
+          return prev ? [data, ...prev] : [data];
+        });
         toast.success(`${data.filename} uploaded.`);
       })
       .finally(() => {

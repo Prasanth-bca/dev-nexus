@@ -20,6 +20,15 @@ export function isAllowedAvatarType(mimeType: string): boolean {
   return mimeType in ALLOWED_MIME_TO_EXT;
 }
 
+const EXT_TO_MIME_TYPE: Record<string, string> = Object.fromEntries(Object.entries(ALLOWED_MIME_TO_EXT).map(([mime, ext]) => [ext, mime]));
+
+/** Derives the real Content-Type from the storage key's extension — the key already encodes
+ *  it (see saveAvatarFile below), so no separate MIME field needs to be persisted just to
+ *  serve it back correctly. Falls back to a generic type rather than the invalid "image/*". */
+export function mimeTypeForStorageKey(storageKey: string): string {
+  return EXT_TO_MIME_TYPE[path.extname(storageKey)] ?? "application/octet-stream";
+}
+
 /** Returns the generated on-disk key (a fresh UUID, never derived from the user) — this is what gets stored on the user's profile. */
 export async function saveAvatarFile(buffer: Buffer, mimeType: string): Promise<string> {
   await mkdir(AVATAR_DIR, { recursive: true });

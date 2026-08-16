@@ -1,6 +1,6 @@
 import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 import { getUserById, setUserAvatarKey, clearUserAvatarKey } from "@/lib/kernel/auth-password";
-import { deleteAvatarFile, isAllowedAvatarType, readAvatarFile, saveAvatarFile } from "@/lib/kernel/avatar-storage";
+import { deleteAvatarFile, isAllowedAvatarType, mimeTypeForStorageKey, readAvatarFile, saveAvatarFile } from "@/lib/kernel/avatar-storage";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -14,7 +14,9 @@ export async function GET() {
 
   try {
     const buffer = await readAvatarFile(storageKey);
-    return new Response(new Uint8Array(buffer), { headers: { "Content-Type": "image/*", "Cache-Control": "private, max-age=300" } });
+    return new Response(new Uint8Array(buffer), {
+      headers: { "Content-Type": mimeTypeForStorageKey(storageKey), "Cache-Control": "private, max-age=300" },
+    });
   } catch {
     return Response.json({ error: "Avatar file is missing on disk." }, { status: 404 });
   }

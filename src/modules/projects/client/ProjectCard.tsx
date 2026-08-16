@@ -124,7 +124,10 @@ export function ProjectCard({
             {priority.label}
           </span>
         </div>
-        <span className="shrink-0 text-[10px] text-muted-foreground">{formatRelativeTime(project.updatedAt)}</span>
+        {/* suppressHydrationWarning: legitimately time-dependent text — see NoteCard.tsx. */}
+        <span className="shrink-0 text-[10px] text-muted-foreground" suppressHydrationWarning>
+          {formatRelativeTime(project.updatedAt)}
+        </span>
       </div>
     </div>
   );

@@ -17,8 +17,21 @@ export const aiAssistantModule: DevNexusModule = {
 
   async onEnable(ctx) {
     await ctx.db.collection(CONVERSATIONS_COLLECTION).createIndex({ updatedAt: -1 });
-    // providers().findOne({active:true}) runs on every chat message (see server/routes.ts).
-    await ctx.db.collection(PROVIDERS_COLLECTION).createIndex({ active: 1 });
+
+    // Enforces "at most one active provider" as a real database constraint, not just app-level
+    // logic — see the isDuplicateKeyError() catch in server/routes.ts's POST /providers. A
+    // partial unique index only constrains documents where active:true, so any number of
+    // inactive providers can coexist; it also still serves providers().findOne({active:true}),
+    // which runs on every chat message. Migrates a pre-existing plain (non-unique) index on the
+    // same field from an earlier version of this module, since MongoDB rejects creating a
+    // differently-specced index on a key pattern that's already indexed.
+    const providersCollection = ctx.db.collection(PROVIDERS_COLLECTION);
+    const staleActiveIndex = (await providersCollection.indexes()).find(
+      (idx) => Object.keys(idx.key).length === 1 && "active" in idx.key && !idx.unique
+    );
+    if (staleActiveIndex?.name) await providersCollection.dropIndex(staleActiveIndex.name);
+    await providersCollection.createIndex({ active: 1 }, { unique: true, partialFilterExpression: { active: true } });
+
     ctx.logger.info("enabled");
   },
 

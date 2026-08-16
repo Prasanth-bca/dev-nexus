@@ -1,7 +1,16 @@
 import type { ModuleContext } from "@/lib/kernel/context";
 import type { RouteDefinition } from "@/lib/kernel/types";
 import { deleteSecret, setSecret } from "@/lib/kernel/secrets";
-import { getRepo, listBranches, listCommits, listIssues, listPullRequests, listRepos, verifyToken } from "@/lib/integrations/github";
+import {
+  getRepo,
+  invalidateGithubToken,
+  listBranches,
+  listCommits,
+  listIssues,
+  listPullRequests,
+  listRepos,
+  verifyToken,
+} from "@/lib/integrations/github";
 
 export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
   return [
@@ -28,6 +37,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         try {
           const { login, scopes } = await verifyToken(token);
           await setSecret("GITHUB_TOKEN", token);
+          invalidateGithubToken();
           ctx.events.emit("github.connected", {});
           return Response.json({ ok: true, username: login, scopes });
         } catch (err) {
@@ -40,6 +50,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       path: "/disconnect",
       handler: async () => {
         await deleteSecret("GITHUB_TOKEN");
+        invalidateGithubToken();
         ctx.events.emit("github.disconnected", {});
         return Response.json({ ok: true });
       },

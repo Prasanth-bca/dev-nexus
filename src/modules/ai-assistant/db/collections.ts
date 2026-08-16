@@ -90,5 +90,12 @@ export interface ToolSettingDTO {
  * just add a pointless approval click before the user even sees the draft to review. `send_email`
  * (a direct, immediate send the AI can call without going through the draft-review flow) does
  * require confirmation, same as before — it's the one tool in this set that actually sends mail.
+ *
+ * `add_email_label`/`mark_email_read` are gated too: email bodies are attacker-controlled and
+ * feed back into the model's context as tool results, so a malicious email can otherwise
+ * instruct the model to mass-label or mark-as-read on its own — e.g. to hide evidence of
+ * itself — with no chance for the user to notice. `list_unread_emails` stays ungated since it
+ * has no side effect to approve; the injection risk it introduces is in what the model does
+ * with what it reads, which is exactly what gating the tools below addresses.
  */
-export const DEFAULT_CONFIRM_REQUIRED = new Set(["delete_note", "send_email"]);
+export const DEFAULT_CONFIRM_REQUIRED = new Set(["delete_note", "send_email", "add_email_label", "mark_email_read"]);

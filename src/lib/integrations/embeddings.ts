@@ -24,14 +24,23 @@ declare global {
 /** Cached on `global` (same pattern as the Mongo client/event bus) so dev-mode hot reload doesn't reload the model on every file change. */
 function getExtractor(): Promise<FeatureExtractor> {
   if (!global._devNexusEmbeddingPipeline) {
-    global._devNexusEmbeddingPipeline = pipeline("feature-extraction", MODEL) as unknown as Promise<FeatureExtractor>;
+    global._devNexusEmbeddingPipeline = (pipeline("feature-extraction", MODEL) as unknown as Promise<FeatureExtractor>).catch((err) => {
+      // Don't leave a rejected promise cached — a failed first load (e.g. no network to
+      // download the ~90MB model on first boot) would otherwise wedge every later call with
+      // the same stale error until the process restarts. Clearing it lets the next call retry.
+      global._devNexusEmbeddingPipeline = undefined;
+      throw err;
+    });
   }
   return global._devNexusEmbeddingPipeline;
 }
 
 /** Kicks off model loading without waiting on it — call once at server start so the first real search isn't the one paying for the download. */
 export function warmUpEmbeddings(): void {
-  void getExtractor();
+  // Errors are deliberately swallowed here — this is a best-effort warm-up, not a real call.
+  // getExtractor() no longer caches a rejection, so the actual error (and a retry) happens
+  // naturally the next time embedText() is called for real.
+  getExtractor().catch(() => {});
 }
 
 export async function embedText(text: string): Promise<number[]> {

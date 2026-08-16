@@ -185,8 +185,14 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const note = await collection().findOne({ _id });
         if (!note) return Response.json({ error: "not found" }, { status: 404 });
 
+        // Only title/category/tags are ever read below — same projection fix already applied
+        // to this module's search()/widget() paths, just missed here (no reason to drag every
+        // candidate's embedding vector along for a plain tag/category comparison).
         const others = await collection()
-          .find({ _id: { $ne: _id }, $or: [{ category: note.category || "__none__" }, { tags: { $in: note.tags } }] })
+          .find(
+            { _id: { $ne: _id }, $or: [{ category: note.category || "__none__" }, { tags: { $in: note.tags } }] },
+            { projection: { title: 1, category: 1, tags: 1 } }
+          )
           .toArray();
 
         const related: RelatedNote[] = others
@@ -219,9 +225,14 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
 
         // Projected to skip fields unused by scoring/display below — every note with an
         // embedding still has to be fetched to be scored (no vector index to pre-filter with),
-        // so this trims per-document payload rather than the candidate set itself.
+        // so this trims per-document payload rather than the candidate set itself. The
+        // limit(2000) is a stopgap, not a real fix — cosineSimilarity() still runs against
+        // every candidate in a blocking loop, which is fine at hundreds of notes but will get
+        // noticeably slower as this grows; a proper fix needs an actual vector index, which is
+        // a bigger project than this patch.
         const notes = await collection()
           .find({ embedding: { $exists: true, $ne: [] } }, { projection: { title: 1, content: 1, embedding: 1 } })
+          .limit(2000)
           .toArray();
 
         const results: SemanticSearchResult[] = notes

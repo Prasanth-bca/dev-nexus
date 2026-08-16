@@ -363,7 +363,10 @@ export function ContactsTab({ project }: Props) {
         </div>
       )}
 
-      <ContactFormDialog open={dialogOpen} onOpenChange={setDialogOpen} contact={editing} onSubmit={handleSubmit} />
+      {/* key forces a clean remount when switching which contact is being edited (or to
+          create-mode) — without it, the dialog briefly showed the previous contact's data in
+          what should be a blank form, since its internal state only resyncs a tick later. */}
+      <ContactFormDialog key={editing?._id ?? "new"} open={dialogOpen} onOpenChange={setDialogOpen} contact={editing} onSubmit={handleSubmit} />
 
       <ConfirmDialog
         open={deleteId !== null}

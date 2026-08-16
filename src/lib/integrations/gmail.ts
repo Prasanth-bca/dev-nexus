@@ -22,6 +22,7 @@ interface GmailApiError {
 
 declare global {
   var _devNexusGmailToken: { value: string; expiresAt: number } | undefined;
+  var _devNexusGmailTokenRefresh: Promise<{ value: string; expiresAt: number }> | undefined;
 }
 
 async function refreshAccessToken(): Promise<{ value: string; expiresAt: number }> {
@@ -57,7 +58,16 @@ async function getAccessToken(): Promise<string> {
   const cached = global._devNexusGmailToken;
   if (cached && cached.expiresAt > Date.now()) return cached.value;
 
-  const fresh = await refreshAccessToken();
+  // De-duplicate concurrent refreshes — without this, multiple Gmail-backed requests arriving
+  // right when the cached token has just expired (e.g. the AI Assistant calling
+  // list_unread_emails while the Inbox view is also loading) each independently hit Google's
+  // token endpoint at once instead of sharing the one refresh already in flight.
+  if (!global._devNexusGmailTokenRefresh) {
+    global._devNexusGmailTokenRefresh = refreshAccessToken().finally(() => {
+      global._devNexusGmailTokenRefresh = undefined;
+    });
+  }
+  const fresh = await global._devNexusGmailTokenRefresh;
   global._devNexusGmailToken = fresh;
   return fresh.value;
 }
@@ -300,12 +310,21 @@ export function isValidEmailList(value: string): boolean {
     .every((s) => s.length > 0 && EMAIL_RE.test(s));
 }
 
+/** Strips CR/LF so a header value can never smuggle an extra header (e.g. a hidden Bcc) into
+ *  the raw RFC822 message below — `subject` in particular reaches here unvalidated by the
+ *  EMAIL_RE check that only ever applied to to/cc/bcc, and can originate from the AI
+ *  Assistant's send_email tool, whose arguments the model can populate from email content
+ *  it previously read. */
+function sanitizeHeaderValue(value: string): string {
+  return value.replace(/[\r\n]+/g, " ").trim();
+}
+
 /** Requires the gmail.send scope — connections made before that scope existed need to reconnect. */
 export async function sendEmail(params: { to: string; cc?: string; bcc?: string; subject: string; body: string }): Promise<{ id: string }> {
-  const headers = [`To: ${params.to}`];
-  if (params.cc?.trim()) headers.push(`Cc: ${params.cc.trim()}`);
-  if (params.bcc?.trim()) headers.push(`Bcc: ${params.bcc.trim()}`);
-  headers.push(`Subject: ${params.subject}`, `Content-Type: text/plain; charset="UTF-8"`, "", params.body);
+  const headers = [`To: ${sanitizeHeaderValue(params.to)}`];
+  if (params.cc?.trim()) headers.push(`Cc: ${sanitizeHeaderValue(params.cc)}`);
+  if (params.bcc?.trim()) headers.push(`Bcc: ${sanitizeHeaderValue(params.bcc)}`);
+  headers.push(`Subject: ${sanitizeHeaderValue(params.subject)}`, `Content-Type: text/plain; charset="UTF-8"`, "", params.body);
 
   const raw = Buffer.from(headers.join("\r\n")).toString("base64url");
 

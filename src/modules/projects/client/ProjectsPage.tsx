@@ -5,7 +5,9 @@ import { PROJECTS_COLLECTION, projectToDTO, type ProjectDoc } from "../db/collec
 import { ProjectsWorkspace } from "./ProjectsWorkspace";
 
 export async function ProjectsPage({ ctx }: { ctx: ModuleContext }) {
-  const docs = await ctx.db.collection<ProjectDoc>(PROJECTS_COLLECTION).find().sort({ updatedAt: -1 }).toArray();
+  // Same defensive limit as this module's own GET / route (see server/routes.ts) — this SSR
+  // loader was querying the full collection directly with no cap.
+  const docs = await ctx.db.collection<ProjectDoc>(PROJECTS_COLLECTION).find().sort({ updatedAt: -1 }).limit(1000).toArray();
   const initialProjects = docs.map(projectToDTO);
 
   return (

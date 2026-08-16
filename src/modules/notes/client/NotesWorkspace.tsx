@@ -85,6 +85,21 @@ export function NotesWorkspace({ initialNotes }: { initialNotes: NoteDTO[] }) {
     });
   }, [notes, activeCategory, activeFilter, search]);
 
+  // The lazy useState()s above only seed correctly on first mount. Without this, jumping to a
+  // different note via ?open= from Global Search / Command Palette while already on this page
+  // changed the URL but not the UI.
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    const isNew = searchParams.get("new") === "1";
+    if (!openId && !isNew) return;
+    const timeout = setTimeout(() => {
+      if (openId) openNote(openId);
+      else startNewNote();
+    }, 0);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   function guarded(action: () => void) {
     if (isDirty) {
       setPendingAction(() => action);

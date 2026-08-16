@@ -121,7 +121,7 @@ Because every module is already isolated behind `ModuleContext` + the event bus 
 
 - `users` — single document for v1 (admin account: email, password hash).
 - `settings` — key/value app-level config (theme, etc).
-- `secrets` — encrypted at rest (AES-256, key from `SECRET_MANAGER_KEY` env var, never stored in the DB). Referenced by key name (e.g. `N8N_API_KEY`), not raw value, from module config.
+- `secrets` — encrypted at rest (AES-256-GCM). The key comes from the `SECRET_MANAGER_KEY` env var when set; otherwise (the default, zero-config path — see SETUP.md) it's auto-generated on first boot and stored in the `instance_keys` collection, deliberately *in* the DB, not a local file, so `npm run backup`/`npm run restore` can move encrypted secrets to a new machine and still decrypt them there. This is a real trade-off, not an oversight: it means anyone who reads the raw database (a backup file, a misconfigured network-exposed Mongo instance) gets the encryption key alongside the ciphertext it protects. Set `SECRET_MANAGER_KEY` explicitly if you want the key to live outside the database — see `src/lib/kernel/instance-keys.ts`. Referenced by key name (e.g. `N8N_API_KEY`), not raw value, from module config.
 - `modules` — `{ id, enabled, config }` per installed module — drives nav + route mounting.
 - `activity_log` — deferred until a second module exists and cross-module activity is actually worth aggregating.
 

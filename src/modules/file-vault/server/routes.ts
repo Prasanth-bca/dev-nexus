@@ -6,6 +6,21 @@ import { deleteStoredFile, readStoredFile, saveFile } from "./storage";
 
 const MAX_SIZE = 25 * 1024 * 1024;
 
+/**
+ * Uploads accept any file type — that's the point of a general-purpose vault — but the
+ * uploader-supplied MIME type is untrusted, and this module's own manifest promises "inline
+ * preview for images and PDFs; download for everything else." The old code served every file
+ * inline with whatever Content-Type the browser claimed at upload time, which meant uploading
+ * something as image/svg+xml or text/html and opening its content URL executed script in the
+ * app's own origin — a stored XSS. SVG is deliberately excluded from "image/*" here even
+ * though it matches the prefix, since an SVG can embed a <script> that runs when rendered
+ * inline the same as raw HTML can.
+ */
+function isSafeToRenderInline(mimeType: string): boolean {
+  if (mimeType === "application/pdf") return true;
+  return mimeType.startsWith("image/") && mimeType !== "image/svg+xml";
+}
+
 function parseId(raw: string): ObjectId | null {
   return ObjectId.isValid(raw) ? new ObjectId(raw) : null;
 }
@@ -78,10 +93,11 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
 
         try {
           const buffer = await readStoredFile(doc.storageKey);
+          const disposition = isSafeToRenderInline(doc.mimeType) ? "inline" : "attachment";
           return new Response(new Uint8Array(buffer), {
             headers: {
               "Content-Type": doc.mimeType,
-              "Content-Disposition": `inline; filename="${doc.filename.replace(/"/g, "")}"`,
+              "Content-Disposition": `${disposition}; filename="${doc.filename.replace(/"/g, "")}"`,
               "Content-Length": String(doc.size),
               // Matches the avatar route's precedent — auth-gated content, so private, and
               // storage keys are fresh UUIDs never reused/mutated in place, so this is safe

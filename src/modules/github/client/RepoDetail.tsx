@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
   CircleDot,
   CircleCheck,
@@ -20,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { getModuleAccent } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 import { PermissionBadge, RelationshipBadge, VisibilityBadge } from "./RepoBadges";
 import type { Branch, Commit, Issue, PullRequest, RepoSummary } from "./types";
 
@@ -81,24 +83,45 @@ export function RepoDetail({
 }) {
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const guard = useRequestGuard();
+
+  const loadDetail = useCallback(
+    (name: string) => {
+      setLoading(true);
+      setError(false);
+      setData(null);
+      const token = guard.start();
+      Promise.all(
+        ["branches", "commits", "pulls", "issues"].map((resource) =>
+          fetch(`/api/modules/github/repos/${name}/${resource}`).then((res) => {
+            if (!res.ok) throw new Error(`${resource} request failed (${res.status})`);
+            return res.json();
+          })
+        )
+      )
+        .then(([branches, commits, pullRequests, issues]) => {
+          // Switching to a different repo before this one's fetch resolves must not let its
+          // (now stale) data land on top of the newly-selected repo's.
+          if (guard.isCurrent(token)) setData({ branches, commits, pullRequests, issues });
+        })
+        .catch(() => {
+          if (guard.isCurrent(token)) setError(true);
+        })
+        .finally(() => {
+          if (guard.isCurrent(token)) setLoading(false);
+        });
+    },
+    [guard]
+  );
 
   useEffect(() => {
     if (!fullName) return;
     // setTimeout(…, 0) defers the setState-then-fetch kickoff out of the effect body itself —
     // same pattern used by the Command Palette's search effect and Gmail's InboxView list loader.
-    const timeout = setTimeout(() => {
-      setLoading(true);
-      setData(null);
-      Promise.all(
-        ["branches", "commits", "pulls", "issues"].map((resource) =>
-          fetch(`/api/modules/github/repos/${fullName}/${resource}`).then((res) => (res.ok ? res.json() : []))
-        )
-      )
-        .then(([branches, commits, pullRequests, issues]) => setData({ branches, commits, pullRequests, issues }))
-        .finally(() => setLoading(false));
-    }, 0);
+    const timeout = setTimeout(() => loadDetail(fullName), 0);
     return () => clearTimeout(timeout);
-  }, [fullName]);
+  }, [fullName, loadDetail]);
 
   if (!fullName) {
     return (
@@ -167,7 +190,19 @@ export function RepoDetail({
         </TabsList>
 
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {loading || !data ? (
+          {error ? (
+            <EmptyState
+              icon={AlertTriangle}
+              accent={ACCENT}
+              title="Couldn't load this repository"
+              description="Something went wrong reaching GitHub."
+              action={
+                <Button type="button" variant="outline" onClick={() => loadDetail(fullName)}>
+                  Retry
+                </Button>
+              }
+            />
+          ) : loading || !data ? (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full rounded-lg" />

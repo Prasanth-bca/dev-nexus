@@ -195,7 +195,10 @@ export function SecretsManager({ initialSecrets }: { initialSecrets: SecretMeta[
                   </div>
                 </div>
 
-                <span className="hidden shrink-0 text-xs text-muted-foreground sm:block">
+                {/* suppressHydrationWarning: toLocaleDateString(undefined, ...) formats using
+                    whichever locale the runtime environment reports, which can legitimately
+                    differ between the server process and the browser. */}
+                <span className="hidden shrink-0 text-xs text-muted-foreground sm:block" suppressHydrationWarning>
                   {`Updated ${new Date(s.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`}
                 </span>
 

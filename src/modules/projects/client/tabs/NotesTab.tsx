@@ -13,6 +13,7 @@ import { getModuleAccent } from "@/lib/icon-map";
 import { formatRelativeTime } from "@/lib/format";
 import type { ProjectDTO } from "../../db/collections";
 import type { NoteDTO } from "../../../notes/db/collections";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 
 const ACCENT = getModuleAccent("projects");
 
@@ -28,16 +29,25 @@ export function NotesTab({ project }: Props) {
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const guard = useRequestGuard();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       setLoading(true);
+      const token = guard.start();
       fetch(`/api/modules/notes?projectId=${project._id}`)
         .then((res) => res.json())
-        .then((data) => setNotes(Array.isArray(data) ? data : []))
-        .finally(() => setLoading(false));
+        .then((data) => {
+          // Switching projects before this one's fetch resolves must not let the previous
+          // project's (now stale) notes render under the newly-selected project's tab.
+          if (guard.isCurrent(token)) setNotes(Array.isArray(data) ? data : []);
+        })
+        .finally(() => {
+          if (guard.isCurrent(token)) setLoading(false);
+        });
     }, 0);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project._id]);
 
   async function handleCreate(e: FormEvent) {

@@ -8,6 +8,7 @@ import type { ProjectFormValues } from "./ProjectFormDialog";
 import { ProjectFormDialog } from "./ProjectFormDialog";
 import { ProjectsHomeView } from "./ProjectsHomeView";
 import { ProjectDetail } from "./ProjectDetail";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 
 function toBody(values: ProjectFormValues) {
   return {
@@ -37,17 +38,24 @@ export function ProjectsWorkspace({ initialProjects }: { initialProjects: Projec
   // A deep link to a slug that isn't in the already-loaded list (e.g. Global Search hit an
   // older cache) fetches it directly by slug rather than showing a false "not found".
   const [fetchedActive, setFetchedActive] = useState<ProjectDTO | null>(null);
+  const guard = useRequestGuard();
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!activeSlug || active) {
         setFetchedActive(null);
         return;
       }
+      const token = guard.start();
       fetch(`/api/modules/projects/slug/${encodeURIComponent(activeSlug)}`)
         .then((res) => (res.ok ? res.json() : null))
-        .then(setFetchedActive);
+        .then((data) => {
+          // Rapidly navigating between two deep-linked slugs must not let the first
+          // (now stale) fetch land after the second one already resolved.
+          if (guard.isCurrent(token)) setFetchedActive(data);
+        });
     }, 0);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSlug, active]);
 
   const openProject = active ?? fetchedActive;
@@ -117,7 +125,16 @@ export function ProjectsWorkspace({ initialProjects }: { initialProjects: Projec
           onProjectUpdated={patchProject}
           onProjectDeleted={goHome}
         />
-        <ProjectFormDialog open={formOpen} onOpenChange={closeForm} project={editingProject} onSubmit={handleEditSubmit} />
+        {/* key forces a clean remount when switching which project is being edited (or to
+            create-mode) — without it, the dialog briefly showed the previous project's name
+            in what should be a blank form, since its internal state only resyncs a tick later. */}
+        <ProjectFormDialog
+          key={editingProject?._id ?? "new"}
+          open={formOpen}
+          onOpenChange={closeForm}
+          project={editingProject}
+          onSubmit={handleEditSubmit}
+        />
       </>
     );
   }
@@ -139,6 +156,7 @@ export function ProjectsWorkspace({ initialProjects }: { initialProjects: Projec
       />
 
       <ProjectFormDialog
+        key={editingProject?._id ?? "new"}
         open={formOpen}
         onOpenChange={closeForm}
         project={editingProject}

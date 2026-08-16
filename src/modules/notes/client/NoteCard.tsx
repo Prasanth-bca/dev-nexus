@@ -131,7 +131,13 @@ export function NoteCard({
           ) : (
             <span />
           )}
-          <span className="shrink-0 text-[10px] text-muted-foreground">{formatRelativeTime(note.updatedAt)}</span>
+          {/* suppressHydrationWarning: this text is legitimately time-dependent — the server
+              and client can compute a different string if a unit boundary ("59 minutes ago" ->
+              "1 hour ago") is crossed in the gap between them. React's documented escape hatch
+              for exactly this case; the client still self-corrects on the next re-render. */}
+          <span className="shrink-0 text-[10px] text-muted-foreground" suppressHydrationWarning>
+            {formatRelativeTime(note.updatedAt)}
+          </span>
         </div>
       </div>
     </div>

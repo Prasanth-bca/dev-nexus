@@ -30,8 +30,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         let configured = false;
         let connected = false;
         try {
-          await ctx.secrets.get("GMAIL_CLIENT_ID");
-          await ctx.secrets.get("GMAIL_CLIENT_SECRET");
+          await Promise.all([ctx.secrets.get("GMAIL_CLIENT_ID"), ctx.secrets.get("GMAIL_CLIENT_SECRET")]);
           configured = true;
         } catch {
           // not configured yet
@@ -115,8 +114,7 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         }
 
         try {
-          const clientId = await ctx.secrets.get("GMAIL_CLIENT_ID");
-          const clientSecret = await ctx.secrets.get("GMAIL_CLIENT_SECRET");
+          const [clientId, clientSecret] = await Promise.all([ctx.secrets.get("GMAIL_CLIENT_ID"), ctx.secrets.get("GMAIL_CLIENT_SECRET")]);
           const tokens = await exchangeCodeForTokens({ clientId, clientSecret, code, redirectUri: redirectUriFor(url.origin) });
 
           if (!tokens.refreshToken) {

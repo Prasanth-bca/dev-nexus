@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Wrench } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/empty-state";
@@ -27,12 +28,22 @@ export function ToolSettingsView() {
   }, []);
 
   async function toggle(name: string, next: boolean) {
+    const previous = next;
     setTools((prev) => prev.map((t) => (t.name === name ? { ...t, requiresConfirmation: next } : t)));
-    await fetch("/api/modules/ai-assistant/tool-settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ toolName: name, requiresConfirmation: next }),
-    });
+    try {
+      const res = await fetch("/api/modules/ai-assistant/tool-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toolName: name, requiresConfirmation: next }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Revert the optimistic flip — a failed save here means the server-side gate silently
+      // stayed at its old value while the UI claimed otherwise (dangerous specifically for a
+      // tool like send_email, where this switch controls whether it needs approval at all).
+      setTools((prev) => prev.map((t) => (t.name === name ? { ...t, requiresConfirmation: !previous } : t)));
+      toast.error(`Could not update the confirmation setting for ${name}.`);
+    }
   }
 
   if (loading) return null;

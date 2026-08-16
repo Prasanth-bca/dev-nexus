@@ -15,8 +15,31 @@ interface GithubApiError {
   message?: string;
 }
 
-async function githubFetch<T>(path: string): Promise<T> {
+declare global {
+  var _devNexusGithubToken: string | undefined;
+}
+
+/**
+ * Unlike Gmail's OAuth access token, a GitHub PAT doesn't expire on a timer — it's a static
+ * secret that only changes when the user edits it in Settings — so this just caches the
+ * decrypted value for the process lifetime rather than tracking an expiry. Without this,
+ * opening one repo-detail view (branches/commits/pulls/issues fetched in parallel) triggered
+ * that many redundant DB round-trips and AES-256-GCM decrypts of the identical token.
+ */
+async function getGithubToken(): Promise<string> {
+  if (global._devNexusGithubToken !== undefined) return global._devNexusGithubToken;
   const token = await getSecret("GITHUB_TOKEN");
+  global._devNexusGithubToken = token;
+  return token;
+}
+
+/** Called when the token changes (Settings save/remove), so a stale one can't outlive the credential it belongs to. */
+export function invalidateGithubToken(): void {
+  global._devNexusGithubToken = undefined;
+}
+
+async function githubFetch<T>(path: string): Promise<T> {
+  const token = await getGithubToken();
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { ...API_HEADERS, Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),

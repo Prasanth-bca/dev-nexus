@@ -1,5 +1,6 @@
 import { getModules } from "@/modules/loaded";
 import type { HttpMethod, RouteDefinition } from "@/lib/kernel/types";
+import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 
 function matchRoute(routes: RouteDefinition[], method: HttpMethod, pathSegments: string[]) {
   for (const route of routes) {
@@ -27,6 +28,11 @@ function matchRoute(routes: RouteDefinition[], method: HttpMethod, pathSegments:
 type RouteContext = { params: Promise<{ moduleId: string; path?: string[] }> };
 
 async function handle(req: Request, method: HttpMethod, routeCtx: RouteContext): Promise<Response> {
+  // proxy.ts already gates every /api/modules/** request behind auth — this is a single
+  // dispatcher for all module routes, so one defense-in-depth check here covers every module's
+  // API surface, same reasoning as /api/secrets/**.
+  if (!(await getCurrentUserId())) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
   const { moduleId, path } = await routeCtx.params;
   const loaded = await getModules();
   const found = loaded.find((m) => m.module.manifest.id === moduleId);

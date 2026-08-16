@@ -178,6 +178,18 @@ export function ChatView({
   const [discardedDrafts, setDiscardedDrafts] = useState<Set<string>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
+  // Mirrors `activeId` for use inside async callbacks — those close over the `activeId` value
+  // from when the request started, which goes stale the instant the user switches conversations
+  // before the response lands. Checking this ref (always current) instead of the closed-over
+  // state is what stops one conversation's response from being applied to a different one.
+  const activeIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+  // Set right before an Escape-triggered setEditingId(null) — removing the focused rename
+  // input from the DOM fires a native blur on it, which would otherwise still call
+  // commitRename() with the stale (about-to-be-cancelled) title from that closure.
+  const cancelingRenameRef = useRef(false);
 
   async function refreshConversations() {
     const res = await fetch("/api/modules/ai-assistant/conversations");
@@ -215,8 +227,9 @@ export function ChatView({
           setMessages([]);
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Depends on searchParams (not []) so a Command Palette jump to a different
+    // ?conversation=/?new=1 while already on this page is honored, not just the initial load.
+  }, [searchParams]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -224,16 +237,20 @@ export function ChatView({
 
   async function openConversation(id: string) {
     setActiveId(id);
+    activeIdRef.current = id;
     setLoadingConvo(true);
     setError(null);
     try {
       const res = await fetch(`/api/modules/ai-assistant/conversations/${id}`);
       const data = await res.json();
+      // Clicking a second conversation before the first one's fetch resolves must not let the
+      // first one's (now stale) messages land on top of the second one's.
+      if (activeIdRef.current !== id) return;
       const loaded: Message[] = data.messages ?? [];
       setMessages(loaded);
       setPending(pendingFromMessages(loaded));
     } finally {
-      setLoadingConvo(false);
+      if (activeIdRef.current === id) setLoadingConvo(false);
     }
   }
 
@@ -263,6 +280,10 @@ export function ChatView({
   }
 
   async function commitRename() {
+    if (cancelingRenameRef.current) {
+      cancelingRenameRef.current = false;
+      return;
+    }
     const id = editingId;
     const title = editingTitle.trim();
     setEditingId(null);
@@ -291,6 +312,7 @@ export function ChatView({
       const data = await res.json();
       convId = data.id;
       setActiveId(convId);
+      activeIdRef.current = convId; // ref must be current immediately, not after the mirroring effect runs
       setConversations((prev) => [{ id: data.id, title: data.title, updatedAt: data.updatedAt }, ...prev]);
     }
 
@@ -305,6 +327,9 @@ export function ChatView({
         body: JSON.stringify({ conversationId: convId, message: messageText }),
       });
       const data = await res.json();
+      // The user may have switched to a different conversation while this was in flight —
+      // applying it now would splice this response into the wrong transcript.
+      if (activeIdRef.current !== convId) return;
       if (!res.ok) {
         setError(data.error || "Request failed.");
         return;
@@ -314,6 +339,8 @@ export function ChatView({
       setMessages((prev) => [...prev.slice(0, -1), ...data.messages]);
       setPending(data.status === "confirm" ? data.toolCall : null);
       refreshConversations();
+    } catch {
+      if (activeIdRef.current === convId) setError("Couldn't reach the server — your message may not have sent.");
     } finally {
       setSending(false);
     }
@@ -329,15 +356,17 @@ export function ChatView({
 
   async function respondToConfirmation(approve: boolean) {
     if (!pending || !activeId || sending) return;
+    const convId = activeId;
     setSending(true);
     setError(null);
     try {
       const res = await fetch("/api/modules/ai-assistant/chat/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: activeId, toolCallId: pending.id, approve }),
+        body: JSON.stringify({ conversationId: convId, toolCallId: pending.id, approve }),
       });
       const data = await res.json();
+      if (activeIdRef.current !== convId) return;
       if (!res.ok) {
         setError(data.error || "Request failed.");
         return;
@@ -345,6 +374,8 @@ export function ChatView({
       setMessages((prev) => [...prev, ...data.messages]);
       setPending(data.status === "confirm" ? data.toolCall : null);
       refreshConversations();
+    } catch {
+      if (activeIdRef.current === convId) setError("Couldn't reach the server — please try again.");
     } finally {
       setSending(false);
     }
@@ -393,6 +424,7 @@ export function ChatView({
                     e.preventDefault();
                     commitRename();
                   } else if (e.key === "Escape") {
+                    cancelingRenameRef.current = true;
                     setEditingId(null);
                   }
                 }}
@@ -480,7 +512,10 @@ export function ChatView({
             )}
             {messages.map((m, i) => (
               <MessageBubble
-                key={i}
+                // toolCallId uniquely identifies a tool-call message (e.g. an email draft) —
+                // keying by index alone let React reuse an EmailDraftCard's local state across
+                // conversations whose messages happened to land at the same position.
+                key={m.toolCallId ?? `msg-${i}`}
                 message={m}
                 conversationId={activeId}
                 regenerateDisabled={sending || !!pending}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, Mail, RotateCcw, Save, Send, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,25 @@ export function EmailDraftCard({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [regenerateOpen, setRegenerateOpen] = useState(false);
   const [instruction, setInstruction] = useState("");
+
+  // The initial useState()s above only seed on first mount. Without this, switching to a
+  // different conversation whose draft_email tool call happens to render at the same list
+  // position kept showing the previous conversation's draft text while pointing at the new
+  // tool call — risking Save/Send acting on mismatched content. toolCallId uniquely identifies
+  // which draft this card represents, so resync whenever it changes to a different one.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setTo(str(initial.to));
+      setCc(str(initial.cc));
+      setBcc(str(initial.bcc));
+      setSubject(str(initial.subject));
+      setBody(str(initial.body));
+      setSent(initial.sent === true);
+      setShowCcBcc(Boolean(str(initial.cc) || str(initial.bcc)));
+    }, 0);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolCallId]);
 
   const toValid = to.trim().length > 0 && isValidEmailList(to);
   const ccValid = isValidEmailList(cc);

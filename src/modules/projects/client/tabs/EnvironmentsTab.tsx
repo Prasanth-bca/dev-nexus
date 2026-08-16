@@ -400,7 +400,16 @@ export function EnvironmentsTab({ project }: Props) {
         </div>
       )}
 
-      <EnvironmentFormDialog open={dialogOpen} onOpenChange={setDialogOpen} environment={editing} onSubmit={handleSubmit} />
+      {/* key forces a clean remount when switching which environment is being edited (or to
+          create-mode) — without it, the dialog briefly showed the previous environment's data
+          in what should be a blank form, since its internal state only resyncs a tick later. */}
+      <EnvironmentFormDialog
+        key={editing?._id ?? "new"}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        environment={editing}
+        onSubmit={handleSubmit}
+      />
 
       <ConfirmDialog
         open={deleteId !== null}

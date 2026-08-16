@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { ObjectId, type UpdateFilter } from "mongodb";
 import { getDb } from "./db";
+import { isDuplicateKeyError } from "./mongo-errors";
 
 export interface UserProfile {
   displayName?: string;
@@ -15,6 +16,9 @@ interface UserDoc {
   email: string;
   passwordHash: string;
   profile?: UserProfile;
+  /** Always `true` — exists solely so a unique index on it can enforce "at most one
+   *  document in this collection," see createAdminUser(). Not a meaningful field on its own. */
+  singleton: true;
 }
 
 export async function hasAnyUser(): Promise<boolean> {
@@ -37,12 +41,29 @@ function verifyPassword(password: string, stored: string): boolean {
   return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
 }
 
-/** Only succeeds once — Dev Nexus is single-admin for now, see ARCHITECTURE.md. */
+/**
+ * Only succeeds once — Dev Nexus is single-admin for now, see ARCHITECTURE.md.
+ *
+ * The old version (a hasAnyUser() count check, then a separate insertOne) had a real race:
+ * two concurrent setup requests — e.g. a double-click on the setup form before it disables —
+ * could both pass the count check and each insert their own admin account. A unique index on
+ * `singleton` closes that: MongoDB rejects the second insert atomically regardless of timing,
+ * since unique-index enforcement (unlike a upsert-on-empty-filter) is safe under concurrency.
+ */
 export async function createAdminUser(email: string, password: string): Promise<string> {
-  if (await hasAnyUser()) throw new Error("An admin account already exists.");
   const db = await getDb();
-  const result = await db.collection<UserDoc>("users").insertOne({ email, passwordHash: hashPassword(password) });
-  return result.insertedId.toString();
+  const users = db.collection<UserDoc>("users");
+  // Idempotent and cheap — this only ever runs during the one-time setup flow, so there's no
+  // cost to ensuring the index exists on every call rather than requiring a separate migration.
+  await users.createIndex({ singleton: 1 }, { unique: true });
+
+  try {
+    const result = await users.insertOne({ email, passwordHash: hashPassword(password), singleton: true });
+    return result.insertedId.toString();
+  } catch (err) {
+    if (isDuplicateKeyError(err)) throw new Error("An admin account already exists.");
+    throw err;
+  }
 }
 
 export async function verifyCredentials(email: string, password: string): Promise<string | null> {

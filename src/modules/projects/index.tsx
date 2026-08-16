@@ -25,6 +25,9 @@ export const projectsModule: DevNexusModule = {
   async onEnable(ctx) {
     await ctx.db.collection(PROJECTS_COLLECTION).createIndex({ slug: 1 }, { unique: true });
     await ctx.db.collection(PROJECTS_COLLECTION).createIndex({ updatedAt: -1 });
+    // GET / filters by status/priority (see server/routes.ts) with no supporting index until
+    // now — forced a collection scan, bounded only by that route's own limit(1000).
+    await ctx.db.collection(PROJECTS_COLLECTION).createIndex({ status: 1, priority: 1 });
     await ctx.db.collection(PROJECT_MEETINGS_COLLECTION).createIndex({ projectId: 1, date: -1 });
     await ctx.db.collection(PROJECT_LINKS_COLLECTION).createIndex({ projectId: 1 });
     await ctx.db.collection(PROJECT_CONTACTS_COLLECTION).createIndex({ projectId: 1 });

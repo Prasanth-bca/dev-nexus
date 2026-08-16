@@ -8,6 +8,7 @@ import { ArrowUpRight, FileText, FolderKanban, History, LogOut, MessageSquarePlu
 import { getModuleAccent } from "@/lib/icon-map";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 
 interface SearchResult {
   id: string;
@@ -88,6 +89,7 @@ export function CommandPalette({
   const { resolvedTheme, setTheme } = useTheme();
   const heroContainerRef = useRef<HTMLDivElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const searchGuard = useRequestGuard();
 
   useEffect(() => {
     if (!open) return;
@@ -100,12 +102,20 @@ export function CommandPalette({
     const delay = query.trim() ? 300 : 0;
     const timeout = setTimeout(() => {
       setLoading(true);
+      const token = searchGuard.start();
       fetch(`/api/search?q=${encodeURIComponent(query)}`)
         .then((res) => res.json())
-        .then((data) => setResults(data.results ?? []))
-        .finally(() => setLoading(false));
+        .then((data) => {
+          // A broader, slower query (e.g. "rea") resolving after a narrower, faster one
+          // ("react") would otherwise silently overwrite the correct results.
+          if (searchGuard.isCurrent(token)) setResults(data.results ?? []);
+        })
+        .finally(() => {
+          if (searchGuard.isCurrent(token)) setLoading(false);
+        });
     }, delay);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, open]);
 
   useEffect(() => {

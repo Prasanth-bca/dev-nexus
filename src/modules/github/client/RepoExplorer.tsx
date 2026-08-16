@@ -9,6 +9,7 @@ import { getModuleAccent } from "@/lib/icon-map";
 import { RepoList } from "./RepoList";
 import { RepoDetail } from "./RepoDetail";
 import type { RepoSummary } from "./types";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 
 const ACCENT = getModuleAccent("github");
 
@@ -33,22 +34,40 @@ export function RepoExplorer() {
     const repo = searchParams.get("repo");
     return repo ? decodeURIComponent(repo) : null;
   });
+  const listGuard = useRequestGuard();
 
   useEffect(() => {
     const timeout = setTimeout(
       () => {
         setLoadingList(true);
+        const token = listGuard.start();
         const params = new URLSearchParams({ filter });
         if (query.trim()) params.set("q", query.trim());
         fetch(`/api/modules/github/repos?${params.toString()}`)
           .then((res) => res.json())
-          .then((data) => setRepos(Array.isArray(data) ? data : []))
-          .finally(() => setLoadingList(false));
+          .then((data) => {
+            // A filter/search change fired a newer request while this one was still in
+            // flight — applying this response now would show results for the old query.
+            if (listGuard.isCurrent(token)) setRepos(Array.isArray(data) ? data : []);
+          })
+          .finally(() => {
+            if (listGuard.isCurrent(token)) setLoadingList(false);
+          });
       },
       query ? 300 : 0
     );
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, filter]);
+
+  // Deep-link support (e.g. from Global Search / Command Palette): jump to whatever ?repo=
+  // currently points at, even if it changes while already on this page (not just on first load).
+  useEffect(() => {
+    const repo = searchParams.get("repo");
+    if (!repo) return;
+    const timeout = setTimeout(() => setSelected(decodeURIComponent(repo)), 0);
+    return () => clearTimeout(timeout);
+  }, [searchParams]);
 
   // The list already has full repo objects in memory — no separate detail fetch needed
   // for the badges/description shown in the header, only for branches/commits/PRs/issues.

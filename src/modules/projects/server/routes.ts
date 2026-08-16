@@ -1,6 +1,7 @@
 import { ObjectId, type Collection, type Filter, type OptionalUnlessRequiredId, type UpdateFilter } from "mongodb";
 import type { ModuleContext } from "@/lib/kernel/context";
 import type { RouteDefinition } from "@/lib/kernel/types";
+import { isDuplicateKeyError } from "@/lib/kernel/mongo-errors";
 import { NOTES_COLLECTION, type NoteDoc } from "@/modules/notes/db/collections";
 import { FILE_VAULT_COLLECTION, type FileVaultDoc } from "@/modules/file-vault/db/collections";
 import { ACTIVITY_COLLECTION, toDTO as activityToDTO, type ActivityDoc } from "@/modules/activity/db/collections";
@@ -338,28 +339,41 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         if (!name) return Response.json({ error: "name is required" }, { status: 400 });
 
         const now = new Date();
-        const slug = await uniqueSlug(projects(), slugify(name));
         const startDate = typeof body.startDate === "string" && body.startDate.trim() ? new Date(body.startDate) : undefined;
         const targetDate = typeof body.targetDate === "string" && body.targetDate.trim() ? new Date(body.targetDate) : undefined;
 
-        const doc: ProjectDoc = {
-          name,
-          slug,
-          description: typeof body.description === "string" ? body.description : "",
-          status: isStatus(body.status) ? body.status : "Planning",
-          priority: isPriority(body.priority) ? body.priority : "Medium",
-          icon: typeof body.icon === "string" ? body.icon.trim() || undefined : undefined,
-          color: typeof body.color === "string" ? body.color.trim() || undefined : undefined,
-          tags: stringArray(body.tags) ?? [],
-          techStack: stringArray(body.techStack) ?? [],
-          repos: stringArray(body.repos) ?? [],
-          startDate: startDate && !Number.isNaN(startDate.getTime()) ? startDate : undefined,
-          targetDate: targetDate && !Number.isNaN(targetDate.getTime()) ? targetDate : undefined,
-          createdAt: now,
-          updatedAt: now,
-        };
+        // uniqueSlug()'s own findOne-then-act check is a race against another concurrent
+        // create landing on the same computed slug — the unique index on `slug` (index.tsx)
+        // is what actually prevents a collision; on the rare loss of that race, retry with
+        // uniqueSlug()'s next candidate instead of surfacing a raw duplicate-key 500.
+        let insertedId: ObjectId;
+        let doc: ProjectDoc;
+        for (;;) {
+          const slug = await uniqueSlug(projects(), slugify(name));
+          doc = {
+            name,
+            slug,
+            description: typeof body.description === "string" ? body.description : "",
+            status: isStatus(body.status) ? body.status : "Planning",
+            priority: isPriority(body.priority) ? body.priority : "Medium",
+            icon: typeof body.icon === "string" ? body.icon.trim() || undefined : undefined,
+            color: typeof body.color === "string" ? body.color.trim() || undefined : undefined,
+            tags: stringArray(body.tags) ?? [],
+            techStack: stringArray(body.techStack) ?? [],
+            repos: stringArray(body.repos) ?? [],
+            startDate: startDate && !Number.isNaN(startDate.getTime()) ? startDate : undefined,
+            targetDate: targetDate && !Number.isNaN(targetDate.getTime()) ? targetDate : undefined,
+            createdAt: now,
+            updatedAt: now,
+          };
+          try {
+            ({ insertedId } = await projects().insertOne(doc));
+            break;
+          } catch (err) {
+            if (!isDuplicateKeyError(err)) throw err;
+          }
+        }
 
-        const { insertedId } = await projects().insertOne(doc);
         ctx.events.emit("projects.created", { id: insertedId.toString(), name: doc.name });
         return Response.json(projectToDTO({ ...doc, _id: insertedId }), { status: 201 });
       },
@@ -393,15 +407,10 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
 
         const body = await req.json().catch(() => ({}) as Record<string, unknown>);
         const patch: UpdatePatch<ProjectDoc> = { $set: { updatedAt: new Date() } };
+        const renaming = typeof body.name === "string" && body.name.trim();
+        const name = renaming ? body.name.trim() : undefined;
 
-        if (typeof body.name === "string" && body.name.trim()) {
-          const name = body.name.trim();
-          patch.$set.name = name;
-          const current = await projects().findOne({ _id });
-          if (current && current.name !== name) {
-            patch.$set.slug = await uniqueSlug(projects(), slugify(name), _id);
-          }
-        }
+        if (name) patch.$set.name = name;
         if (typeof body.description === "string") patch.$set.description = body.description;
         if (isStatus(body.status)) patch.$set.status = body.status;
         if (isPriority(body.priority)) patch.$set.priority = body.priority;
@@ -413,11 +422,28 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         optionalDate(body, "startDate", patch);
         optionalDate(body, "targetDate", patch);
 
-        const result = await projects().findOneAndUpdate(
-          { _id },
-          { $set: patch.$set, ...(patch.$unset ? { $unset: patch.$unset } : {}) },
-          { returnDocument: "after" }
-        );
+        // Same race as the create path above: uniqueSlug()'s check-then-act read can lose to
+        // another concurrent rename landing on the same slug, so retry with the next
+        // candidate on a duplicate-key error instead of surfacing a raw 500.
+        let result;
+        for (;;) {
+          if (name) {
+            const current = await projects().findOne({ _id });
+            if (current && current.name !== name) {
+              patch.$set.slug = await uniqueSlug(projects(), slugify(name), _id);
+            }
+          }
+          try {
+            result = await projects().findOneAndUpdate(
+              { _id },
+              { $set: patch.$set, ...(patch.$unset ? { $unset: patch.$unset } : {}) },
+              { returnDocument: "after" }
+            );
+            break;
+          } catch (err) {
+            if (!isDuplicateKeyError(err)) throw err;
+          }
+        }
         if (!result) return Response.json({ error: "not found" }, { status: 404 });
 
         ctx.events.emit("projects.updated", { id: params.id, name: result.name });
@@ -453,16 +479,33 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
       path: "/:id/overview",
       handler: async (_req, params) => {
         const projectId = params.id;
-        const [noteIds, fileIds, secretCount, meetingCount, linkCount, contactCount, environmentCount, project] = await Promise.all([
-          ctx.db.collection<NoteDoc>(NOTES_COLLECTION).find({ projectId }, { projection: { _id: 1 } }).toArray(),
-          ctx.db.collection<FileVaultDoc>(FILE_VAULT_COLLECTION).find({ projectId }, { projection: { _id: 1 } }).toArray(),
-          ctx.db.collection(SECRETS_COLLECTION).countDocuments({ projectId }),
-          meetings().countDocuments({ projectId }),
-          links().countDocuments({ projectId }),
-          contacts().countDocuments({ projectId }),
-          environments().countDocuments({ projectId }),
-          projects().findOne({ _id: parseId(projectId) ?? new ObjectId() }),
-        ]);
+        // noteIds/fileIds only ever feed the $in below (a bounded "recent activity" lookup,
+        // not an authoritative count) — capped and sorted by recency so the cap drops the
+        // least-relevant candidates first. Exact totals come from countDocuments() instead,
+        // which is both cheaper than fetching every id and immune to the cap undercounting.
+        const [noteCount, fileCount, noteIds, fileIds, secretCount, meetingCount, linkCount, contactCount, environmentCount, project] =
+          await Promise.all([
+            ctx.db.collection<NoteDoc>(NOTES_COLLECTION).countDocuments({ projectId }),
+            ctx.db.collection<FileVaultDoc>(FILE_VAULT_COLLECTION).countDocuments({ projectId }),
+            ctx.db
+              .collection<NoteDoc>(NOTES_COLLECTION)
+              .find({ projectId }, { projection: { _id: 1 } })
+              .sort({ updatedAt: -1 })
+              .limit(500)
+              .toArray(),
+            ctx.db
+              .collection<FileVaultDoc>(FILE_VAULT_COLLECTION)
+              .find({ projectId }, { projection: { _id: 1 } })
+              .sort({ uploadedAt: -1 })
+              .limit(500)
+              .toArray(),
+            ctx.db.collection(SECRETS_COLLECTION).countDocuments({ projectId }),
+            meetings().countDocuments({ projectId }),
+            links().countDocuments({ projectId }),
+            contacts().countDocuments({ projectId }),
+            environments().countDocuments({ projectId }),
+            projects().findOne({ _id: parseId(projectId) ?? new ObjectId() }),
+          ]);
         if (!project) return Response.json({ error: "not found" }, { status: 404 });
 
         const ids = [...noteIds.map((n) => n._id.toString()), ...fileIds.map((f) => f._id.toString())];
@@ -478,8 +521,8 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         return Response.json({
           counts: {
             repos: project.repos.length,
-            notes: noteIds.length,
-            files: fileIds.length,
+            notes: noteCount,
+            files: fileCount,
             secrets: secretCount,
             meetings: meetingCount,
             links: linkCount,
@@ -497,9 +540,21 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
         const projectId = params.id;
         const limit = Math.min(Number(new URL(req.url).searchParams.get("limit")) || 50, 200);
 
+        // Same bounded-candidate-list reasoning as /overview above — these ids only feed the
+        // $in lookup below, not a count, so capping (sorted by recency) is safe.
         const [noteIds, fileIds] = await Promise.all([
-          ctx.db.collection<NoteDoc>(NOTES_COLLECTION).find({ projectId }, { projection: { _id: 1 } }).toArray(),
-          ctx.db.collection<FileVaultDoc>(FILE_VAULT_COLLECTION).find({ projectId }, { projection: { _id: 1 } }).toArray(),
+          ctx.db
+            .collection<NoteDoc>(NOTES_COLLECTION)
+            .find({ projectId }, { projection: { _id: 1 } })
+            .sort({ updatedAt: -1 })
+            .limit(500)
+            .toArray(),
+          ctx.db
+            .collection<FileVaultDoc>(FILE_VAULT_COLLECTION)
+            .find({ projectId }, { projection: { _id: 1 } })
+            .sort({ uploadedAt: -1 })
+            .limit(500)
+            .toArray(),
         ]);
         const ids = [...noteIds.map((n) => n._id.toString()), ...fileIds.map((f) => f._id.toString())];
         if (!ids.length) return Response.json([]);

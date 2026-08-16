@@ -13,6 +13,18 @@ const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 export const SESSION_COOKIE_NAME = "dev_nexus_session";
 export const SESSION_MAX_AGE_SECONDS = SESSION_TTL_MS / 1000;
 
+/**
+ * Whether to mark the session cookie `Secure` — never hardcoded true, since this app is
+ * primarily run locally over plain HTTP (localhost, or a LAN IP), where a Secure cookie
+ * would silently fail to be set at all and break login entirely. Checks the request's own
+ * protocol for a direct HTTPS connection, and falls back to `x-forwarded-proto` for the case
+ * where TLS is terminated by a reverse proxy in front of the Node process.
+ */
+export function isSecureRequest(req: Request): boolean {
+  if (new URL(req.url).protocol === "https:") return true;
+  return req.headers.get("x-forwarded-proto") === "https";
+}
+
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = "";
   for (const b of bytes) binary += String.fromCharCode(b);

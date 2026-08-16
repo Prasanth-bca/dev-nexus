@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { step, ok, fail } from "../../shared/logger";
+import { step, ok, fail, warn } from "../../shared/logger";
 import { ENV_LOCAL_PATH, STORAGE_DIRS } from "../../shared/paths";
 
 export interface ValidationResult {
@@ -43,6 +43,9 @@ export async function run(): Promise<ValidationResult> {
     secrets = false;
   }
   report("Secrets & encryption keys", secrets);
+  if (secrets && !process.env.SECRET_MANAGER_KEY) {
+    warn("Encryption key lives in the database, not SECRET_MANAGER_KEY — see ARCHITECTURE.md §4 (\"Core data model\")");
+  }
 
   const { hasAnyUser } = await import("@/lib/kernel/auth-password");
   const authentication = database && (await hasAnyUser().catch(() => false));

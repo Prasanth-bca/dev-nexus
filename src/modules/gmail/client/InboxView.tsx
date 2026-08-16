@@ -6,6 +6,7 @@ import { Inbox, Mail, MailOpen, Search, Sun } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { getModuleAccent } from "@/lib/icon-map";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 import { MessageList } from "./MessageList";
 import { MessageDetail } from "./MessageDetail";
 import type { EmailDetail, EmailSummary, InboxFilter } from "./types";
@@ -56,48 +57,61 @@ export function InboxView() {
   const [selectedId, setSelectedId] = useState<string | null>(() => searchParams.get("open"));
   const [selectedEmail, setSelectedEmail] = useState<EmailDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(() => searchParams.has("open"));
+  const listGuard = useRequestGuard();
+  const detailGuard = useRequestGuard();
 
   useEffect(() => {
     const timeout = setTimeout(
       () => {
         setLoadingList(true);
+        const token = listGuard.start();
         const params = new URLSearchParams({ filter });
         if (query.trim()) params.set("q", query.trim());
         fetch(`/api/modules/gmail/messages?${params.toString()}`)
           .then((res) => res.json())
-          .then((data) => setMessages(Array.isArray(data) ? data : []))
-          .finally(() => setLoadingList(false));
+          .then((data) => {
+            // A search/filter change fired a newer request while this one was still in
+            // flight — applying this response now would show results for the old query.
+            if (listGuard.isCurrent(token)) setMessages(Array.isArray(data) ? data : []);
+          })
+          .finally(() => {
+            if (listGuard.isCurrent(token)) setLoadingList(false);
+          });
       },
       query ? 300 : 0
     );
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, filter]);
 
   function openMessage(id: string) {
     setSelectedId(id);
     setLoadingDetail(true);
+    const token = detailGuard.start();
     fetch(`/api/modules/gmail/messages/${id}`)
       .then((res) => res.json())
       .then((data) => {
+        // Clicking a second message before the first one's fetch resolves must not let the
+        // first one's (now stale) content land on top of the second one's.
+        if (!detailGuard.isCurrent(token)) return;
         setSelectedEmail(data);
         setMessages((prev) => prev?.map((m) => (m.id === id ? { ...m, unread: false } : m)) ?? prev);
       })
-      .finally(() => setLoadingDetail(false));
+      .finally(() => {
+        if (detailGuard.isCurrent(token)) setLoadingDetail(false);
+      });
   }
 
-  // Deep-link support (e.g. from Global Search): fetch the message ?open= already pointed at.
+  // Deep-link support (e.g. from Global Search / Command Palette): open whatever ?open=
+  // currently points at. Depends on searchParams (not []) so jumping to a different message
+  // via the same param while already on this page is honored, not just the initial load.
   useEffect(() => {
     const openId = searchParams.get("open");
     if (!openId) return;
-    fetch(`/api/modules/gmail/messages/${openId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSelectedEmail(data);
-        setMessages((prev) => prev?.map((m) => (m.id === openId ? { ...m, unread: false } : m)) ?? prev);
-      })
-      .finally(() => setLoadingDetail(false));
+    const timeout = setTimeout(() => openMessage(openId), 0);
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   function handleMarkedRead(id: string) {
     setSelectedEmail((prev) => (prev && prev.id === id ? { ...prev, unread: false } : prev));

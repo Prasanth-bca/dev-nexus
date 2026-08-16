@@ -70,7 +70,14 @@ export const activityModule: DevNexusModule = {
           payload: (payload ?? {}) as Record<string, unknown>,
           timestamp: new Date(meta.timestamp),
         };
-        void ctx.db.collection<ActivityDoc>(ACTIVITY_COLLECTION).insertOne(doc);
+        // Fire-and-forget by necessity (the event bus subscriber can't be awaited), but a
+        // failed write used to disappear silently — a transient Mongo error during any tracked
+        // event (note create/delete, file upload, Gmail send, ...) meant the activity record
+        // was just gone, with nothing logged to explain the gap.
+        ctx.db
+          .collection<ActivityDoc>(ACTIVITY_COLLECTION)
+          .insertOne(doc)
+          .catch((err) => ctx.logger.error("Failed to record activity event", { type: meta.type, error: String(err) }));
       });
     }
 

@@ -5,7 +5,16 @@ import { NOTES_COLLECTION, type NoteDoc, type NoteDTO } from "../db/collections"
 import { NotesWorkspace } from "./NotesWorkspace";
 
 export async function NotesPage({ ctx }: { ctx: ModuleContext }) {
-  const items = await ctx.db.collection<NoteDoc>(NOTES_COLLECTION).find().sort({ pinned: -1, updatedAt: -1 }).toArray();
+  // Same defensive limit + embedding projection as this module's own GET / route (see
+  // server/routes.ts) — this SSR loader was fetching every note's full document, including
+  // its 384-dim embedding vector, on every single page load, which was strictly worse than
+  // the API route it duplicates.
+  const items = await ctx.db
+    .collection<NoteDoc>(NOTES_COLLECTION)
+    .find({}, { projection: { embedding: 0 } })
+    .sort({ pinned: -1, updatedAt: -1 })
+    .limit(1000)
+    .toArray();
 
   const initialNotes: NoteDTO[] = items.map((note) => ({
     _id: note._id.toString(),

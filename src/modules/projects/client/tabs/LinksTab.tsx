@@ -343,7 +343,10 @@ export function LinksTab({ project }: Props) {
         </div>
       )}
 
-      <LinkFormDialog open={dialogOpen} onOpenChange={setDialogOpen} link={editing} onSubmit={handleSubmit} />
+      {/* key forces a clean remount when switching which link is being edited (or to
+          create-mode) — without it, the dialog briefly showed the previous link's data in
+          what should be a blank form, since its internal state only resyncs a tick later. */}
+      <LinkFormDialog key={editing?._id ?? "new"} open={dialogOpen} onOpenChange={setDialogOpen} link={editing} onSubmit={handleSubmit} />
 
       <ConfirmDialog
         open={deleteId !== null}

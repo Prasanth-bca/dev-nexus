@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { formatBytes, formatRelativeTime } from "@/lib/format";
 import type { ProjectDTO } from "../../db/collections";
 import type { FileVaultDTO } from "../../../file-vault/db/collections";
+import { useRequestGuard } from "@/hooks/use-request-guard";
 
 const ACCENT = getModuleAccent("projects");
 
@@ -32,16 +33,25 @@ export function FilesTab({ project }: Props) {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const guard = useRequestGuard();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       setLoading(true);
+      const token = guard.start();
       fetch(`/api/modules/file-vault/files?projectId=${project._id}`)
         .then((res) => res.json())
-        .then((data) => setFiles(Array.isArray(data) ? data : []))
-        .finally(() => setLoading(false));
+        .then((data) => {
+          // Switching projects before this one's fetch resolves must not let the previous
+          // project's (now stale) files render under the newly-selected project's tab.
+          if (guard.isCurrent(token)) setFiles(Array.isArray(data) ? data : []);
+        })
+        .finally(() => {
+          if (guard.isCurrent(token)) setLoading(false);
+        });
     }, 0);
     return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project._id]);
 
   function handleUpload(e: ChangeEvent<HTMLInputElement>) {
