@@ -1,0 +1,71 @@
+# Dev Nexus — Full Docker Compose (app + MongoDB in containers)
+#
+# Prerequisites:
+#   - .env.local present with SECRET_MANAGER_KEY, SESSION_SECRET, MONGODB_DB
+#     (If .env.local doesn't exist, create it from .env.example or app will auto-generate keys)
+#
+# Usage:
+#   docker compose up --build -d
+#   docker compose logs -f app
+#   docker compose down
+#   docker compose down -v  # (removes volumes too — deletes all data)
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: dev-nexus-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      # Persist MongoDB data across container restarts
+      - dnx-mongodb-data:/data/db
+    environment:
+      # No authentication for local development — add MONGO_INITDB_ROOT_USERNAME/PASSWORD for production
+      - MONGO_INITDB_DATABASE=dev_nexus
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dev-nexus
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      # Connect to MongoDB container via service name
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB=dev_nexus
+      # Point writable directories at the bind-mounted host volumes
+      - FILE_VAULT_DIR=/data/var/file-vault
+      - AVATAR_DIR=/data/var/avatars
+      # Transformers.js model cache (~90MB ONNX model) — persisted in a named volume
+      - TRANSFORMERS_CACHE_DIR=/app/.cache
+    volumes:
+      # Bind-mount var/ so file-vault, avatars, backups, exports persist on host
+      - ./var:/data/var
+      # Named volume for transformers.js model cache (survives container rebuilds)
+      - dnx-transformers-cache:/app/.cache
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/auth/status || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  dnx-mongodb-data:
+    name: dnx-mongodb-data
+  dnx-transformers-cache:
+    name: dnx-transformers-cache

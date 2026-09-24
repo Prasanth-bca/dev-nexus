@@ -7,6 +7,9 @@ import { getUserById } from "@/lib/kernel/auth-password";
 import { getSecret } from "@/lib/kernel/secrets";
 import { SetupWizard } from "./SetupWizard";
 
+// Force dynamic rendering — this page reads from MongoDB
+export const dynamic = 'force-dynamic';
+
 /**
  * proxy.ts already gates this route (redirects unauthenticated visitors to /login,
  * and redirects here from /dashboard until setup is complete). This server-side

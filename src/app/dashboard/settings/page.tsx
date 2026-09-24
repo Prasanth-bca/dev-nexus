@@ -7,6 +7,9 @@ import { AccountForm } from "./AccountForm";
 import { ProfileForm } from "./ProfileForm";
 import { ReopenSetupCard } from "./ReopenSetupCard";
 
+// Force dynamic rendering — this page reads from MongoDB
+export const dynamic = 'force-dynamic';
+
 export default async function SettingsPage() {
   const userId = await getCurrentUserId();
   if (!userId) redirect("/login");

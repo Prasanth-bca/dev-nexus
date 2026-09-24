@@ -1,4 +1,8 @@
-import { pipeline } from "@huggingface/transformers";
+import { pipeline, env } from "@huggingface/transformers";
+
+if (process.env.TRANSFORMERS_CACHE_DIR) {
+  env.cacheDir = process.env.TRANSFORMERS_CACHE_DIR;
+}
 
 /**
  * Local embeddings via transformers.js — runs entirely in-process inside the Next.js server

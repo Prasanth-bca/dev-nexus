@@ -53,21 +53,30 @@ export const notesModule: DevNexusModule = {
   },
 
   async widget(ctx) {
-    const collection = ctx.db.collection<NoteDoc>(NOTES_COLLECTION);
-    const [total, recent] = await Promise.all([
-      collection.estimatedDocumentCount(),
-      collection.find({}).sort({ updatedAt: -1 }).limit(4).toArray(),
-    ]);
-    return {
-      stat: { label: "Notes", value: total },
-      items: recent.map((n) => ({
-        id: n._id.toString(),
-        label: n.title || "Untitled",
-        sublabel: formatRelativeTime(n.updatedAt),
-        href: `/dashboard/notes?open=${n._id.toString()}`,
-      })),
-      emptyMessage: "No notes yet — create your first one.",
-      href: "/dashboard/notes",
-    };
+    try {
+      const collection = ctx.db.collection<NoteDoc>(NOTES_COLLECTION);
+      const [total, recent] = await Promise.all([
+        collection.estimatedDocumentCount(),
+        collection.find({}).sort({ updatedAt: -1 }).limit(4).toArray(),
+      ]);
+      return {
+        stat: { label: "Notes", value: total },
+        items: recent.map((n) => ({
+          id: n._id.toString(),
+          label: n.title || "Untitled",
+          sublabel: formatRelativeTime(n.updatedAt),
+          href: `/dashboard/notes?open=${n._id.toString()}`,
+        })),
+        emptyMessage: "No notes yet — create your first one.",
+        href: "/dashboard/notes",
+      };
+    } catch {
+      return {
+        stat: { label: "Notes", value: 0 },
+        items: [],
+        emptyMessage: "No notes yet — create your first one.",
+        href: "/dashboard/notes",
+      };
+    }
   },
 };

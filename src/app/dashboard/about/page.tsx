@@ -15,6 +15,9 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getModuleAccent, getModuleIcon } from "@/lib/icon-map";
 
+// Force dynamic rendering — this page reads from MongoDB
+export const dynamic = 'force-dynamic';
+
 /** Capabilities a module opts into via the kernel contract — read off the live module object. */
 function capabilitiesOf(mod: { search?: unknown; widget?: unknown; healthCheck?: unknown }): string[] {
   const caps: string[] = [];

@@ -48,21 +48,30 @@ export const fileVaultModule: DevNexusModule = {
   },
 
   async widget(ctx) {
-    const collection = ctx.db.collection<FileVaultDoc>(FILE_VAULT_COLLECTION);
-    const [total, recent] = await Promise.all([
-      collection.estimatedDocumentCount(),
-      collection.find({}).sort({ uploadedAt: -1 }).limit(4).toArray(),
-    ]);
-    return {
-      stat: { label: "Files", value: total },
-      items: recent.map((f) => ({
-        id: f._id.toString(),
-        label: f.filename,
-        sublabel: `${formatBytes(f.size)} · ${formatRelativeTime(f.uploadedAt)}`,
-        href: `/dashboard/file-vault?open=${f._id.toString()}`,
-      })),
-      emptyMessage: "No files yet — upload your first one.",
-      href: "/dashboard/file-vault",
-    };
+    try {
+      const collection = ctx.db.collection<FileVaultDoc>(FILE_VAULT_COLLECTION);
+      const [total, recent] = await Promise.all([
+        collection.estimatedDocumentCount(),
+        collection.find({}).sort({ uploadedAt: -1 }).limit(4).toArray(),
+      ]);
+      return {
+        stat: { label: "Files", value: total },
+        items: recent.map((f) => ({
+          id: f._id.toString(),
+          label: f.filename,
+          sublabel: `${formatBytes(f.size)} · ${formatRelativeTime(f.uploadedAt)}`,
+          href: `/dashboard/file-vault?open=${f._id.toString()}`,
+        })),
+        emptyMessage: "No files yet — upload your first one.",
+        href: "/dashboard/file-vault",
+      };
+    } catch {
+      return {
+        stat: { label: "Files", value: 0 },
+        items: [],
+        emptyMessage: "No files yet — upload your first one.",
+        href: "/dashboard/file-vault",
+      };
+    }
   },
 };

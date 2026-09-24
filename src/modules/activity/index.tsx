@@ -90,26 +90,35 @@ export const activityModule: DevNexusModule = {
   },
 
   async widget(ctx) {
-    const collection = ctx.db.collection<ActivityDoc>(ACTIVITY_COLLECTION);
-    const [total, recent, trend] = await Promise.all([
-      collection.estimatedDocumentCount(),
-      collection.find({}).sort({ timestamp: -1 }).limit(4).toArray(),
-      computeSevenDayTrend(ctx),
-    ]);
-    return {
-      stat: { label: "Events", value: total },
-      items: recent.map((d) => {
-        const dto = toDTO(d._id.toString(), d);
-        return {
-          id: dto.id,
-          label: dto.summary,
-          sublabel: formatRelativeTime(dto.timestamp),
-          href: dto.href ?? "/dashboard/activity",
-        };
-      }),
-      emptyMessage: "No activity yet.",
-      href: "/dashboard/activity",
-      trend,
-    };
+    try {
+      const collection = ctx.db.collection<ActivityDoc>(ACTIVITY_COLLECTION);
+      const [total, recent, trend] = await Promise.all([
+        collection.estimatedDocumentCount(),
+        collection.find({}).sort({ timestamp: -1 }).limit(4).toArray(),
+        computeSevenDayTrend(ctx),
+      ]);
+      return {
+        stat: { label: "Events", value: total },
+        items: recent.map((d) => {
+          const dto = toDTO(d._id.toString(), d);
+          return {
+            id: dto.id,
+            label: dto.summary,
+            sublabel: formatRelativeTime(dto.timestamp),
+            href: dto.href ?? "/dashboard/activity",
+          };
+        }),
+        emptyMessage: "No activity yet.",
+        href: "/dashboard/activity",
+        trend,
+      };
+    } catch {
+      return {
+        stat: { label: "Events", value: 0 },
+        items: [],
+        emptyMessage: "No activity yet.",
+        href: "/dashboard/activity",
+      };
+    }
   },
 };

@@ -211,51 +211,71 @@ export function buildRoutes(ctx: ModuleContext): RouteDefinition[] {
     {
       method: "GET",
       path: "/providers",
-      handler: async () => Response.json((await providers().find().sort({ provider: 1 }).limit(50).toArray()).map(toProviderDTO)),
+      handler: async () => {
+        try {
+          const docs = await providers().find().sort({ provider: 1 }).limit(50).toArray();
+          return Response.json(docs.map(toProviderDTO));
+        } catch (err) {
+          // Collection doesn't exist yet (fresh database) — return empty list
+          if (err instanceof Error && err.message.includes("ns does not exist")) {
+            return Response.json([]);
+          }
+          throw err;
+        }
+      },
     },
     {
       method: "POST",
       path: "/providers",
       handler: async (req) => {
-        const body = await req.json().catch(() => ({}) as Record<string, unknown>);
-        const provider = body.provider as ProviderType;
-        const model = typeof body.model === "string" ? body.model.trim() : "";
-        const apiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
-        const baseUrl = typeof body.baseUrl === "string" && body.baseUrl.trim() ? body.baseUrl.trim() : undefined;
+        try {
+          const body = await req.json().catch(() => ({}) as Record<string, unknown>);
+          const provider = body.provider as ProviderType;
+          const model = typeof body.model === "string" ? body.model.trim() : "";
+          const apiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+          const baseUrl = typeof body.baseUrl === "string" && body.baseUrl.trim() ? body.baseUrl.trim() : undefined;
 
-        if (!KNOWN_PROVIDERS.includes(provider)) {
-          return Response.json({ error: `Provider must be one of: ${KNOWN_PROVIDERS.join(", ")}` }, { status: 400 });
-        }
-        if (!model) return Response.json({ error: "Model is required." }, { status: 400 });
-        if (!apiKey) return Response.json({ error: "API key is required." }, { status: 400 });
-        if (provider === "custom" && !baseUrl) {
-          return Response.json({ error: "Custom provider requires a base URL." }, { status: 400 });
-        }
-
-        const secretName = secretNameFor(provider);
-        await setSecret(secretName, apiKey);
-
-        await providers().updateOne(
-          { provider },
-          { $set: { provider, model, secretName, baseUrl, updatedAt: new Date() }, $setOnInsert: { active: false } },
-          { upsert: true }
-        );
-
-        // Convenience: if nothing is active yet, make this the active provider. This read-
-        // then-write is still technically racy against another concurrent add, but the partial
-        // unique index on {active:true} (see index.tsx's onEnable) makes the *consequence*
-        // harmless instead of corrupting — whichever update commits first wins, and the loser
-        // just throws a duplicate-key error we ignore, leaving exactly one provider active
-        // rather than two.
-        if ((await providers().countDocuments({ active: true })) === 0) {
-          try {
-            await providers().updateOne({ provider }, { $set: { active: true } });
-          } catch (err) {
-            if (!isDuplicateKeyError(err)) throw err;
+          if (!KNOWN_PROVIDERS.includes(provider)) {
+            return Response.json({ error: `Provider must be one of: ${KNOWN_PROVIDERS.join(", ")}` }, { status: 400 });
           }
-        }
+          if (!model) return Response.json({ error: "Model is required." }, { status: 400 });
+          if (!apiKey) return Response.json({ error: "API key is required." }, { status: 400 });
+          if (provider === "custom" && !baseUrl) {
+            return Response.json({ error: "Custom provider requires a base URL." }, { status: 400 });
+          }
 
-        return Response.json({ ok: true }, { status: 201 });
+          const secretName = secretNameFor(provider);
+          await setSecret(secretName, apiKey);
+
+          await providers().updateOne(
+            { provider },
+            { $set: { provider, model, secretName, baseUrl, updatedAt: new Date() }, $setOnInsert: { active: false } },
+            { upsert: true }
+          );
+
+          // Convenience: if nothing is active yet, make this the active provider. This read-
+          // then-write is still technically racy against another concurrent add, but the partial
+          // unique index on {active:true} (see index.tsx's onEnable) makes the *consequence*
+          // harmless instead of corrupting — whichever update commits first wins, and the loser
+          // just throws a duplicate-key error we ignore, leaving exactly one provider active
+          // rather than two.
+          if ((await providers().countDocuments({ active: true })) === 0) {
+            try {
+              await providers().updateOne({ provider }, { $set: { active: true } });
+            } catch (err) {
+              if (!isDuplicateKeyError(err)) throw err;
+            }
+          }
+
+          return Response.json({ ok: true }, { status: 201 });
+        } catch (err) {
+          // Collection doesn't exist yet (fresh database) — create it implicitly by retrying
+          if (err instanceof Error && err.message.includes("ns does not exist")) {
+            // MongoDB will auto-create the collection on the next write attempt
+            return Response.json({ error: "Database initializing. Please try again." }, { status: 503 });
+          }
+          throw err;
+        }
       },
     },
     {

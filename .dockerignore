@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Local instance data — uploads, temp files, logs, exports, backups
+var/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Testing
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Deployment scripts / docs
+DEPLOYMENT.md
+SETUP.md
+ARCHITECTURE.md
+GUIDELINES.md
+VISION.md
+README.md
+update.bat
+update.sh
+devnexus.bat
+devnexus.sh
+auto_setup.py
+
+# Misc
+*.pem
+.vercel

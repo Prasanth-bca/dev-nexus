@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { getModulesOnce } from "../dashboard-data";
 
+// Force dynamic rendering — this page reads from MongoDB
+export const dynamic = 'force-dynamic';
+
 export default async function ModulePage({ params }: { params: Promise<{ moduleId: string }> }) {
   const { moduleId } = await params;
   const loaded = await getModulesOnce();

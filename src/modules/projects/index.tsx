@@ -55,21 +55,30 @@ export const projectsModule: DevNexusModule = {
   },
 
   async widget(ctx) {
-    const collection = ctx.db.collection<ProjectDoc>(PROJECTS_COLLECTION);
-    const [total, recent] = await Promise.all([
-      collection.estimatedDocumentCount(),
-      collection.find({}).sort({ updatedAt: -1 }).limit(4).toArray(),
-    ]);
-    return {
-      stat: { label: "Projects", value: total },
-      items: recent.map((p) => ({
-        id: p._id.toString(),
-        label: p.name,
-        sublabel: `${p.status} · ${formatRelativeTime(p.updatedAt)}`,
-        href: `/dashboard/projects?project=${p.slug}`,
-      })),
-      emptyMessage: "No projects yet — create your first one.",
-      href: "/dashboard/projects",
-    };
+    try {
+      const collection = ctx.db.collection<ProjectDoc>(PROJECTS_COLLECTION);
+      const [total, recent] = await Promise.all([
+        collection.estimatedDocumentCount(),
+        collection.find({}).sort({ updatedAt: -1 }).limit(4).toArray(),
+      ]);
+      return {
+        stat: { label: "Projects", value: total },
+        items: recent.map((p) => ({
+          id: p._id.toString(),
+          label: p.name,
+          sublabel: `${p.status} · ${formatRelativeTime(p.updatedAt)}`,
+          href: `/dashboard/projects?project=${p.slug}`,
+        })),
+        emptyMessage: "No projects yet — create your first one.",
+        href: "/dashboard/projects",
+      };
+    } catch {
+      return {
+        stat: { label: "Projects", value: 0 },
+        items: [],
+        emptyMessage: "No projects yet — create your first one.",
+        href: "/dashboard/projects",
+      };
+    }
   },
 };
