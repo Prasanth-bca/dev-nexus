@@ -27,9 +27,10 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
-# Install wget (for healthcheck) and ONNX runtime dependencies
+# Install wget (for healthcheck), ca-certificates (TLS verification for IMAP/SMTP), and ONNX runtime dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends wget && \
+    apt-get install -y --no-install-recommends wget ca-certificates && \
+    update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Create non-root user and writable directories for var/

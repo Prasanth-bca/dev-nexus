@@ -31,7 +31,7 @@ export function DashboardShell({ moduleLinks, profile, children }: DashboardShel
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <HomeHeader moduleLinks={moduleLinks} profile={profile} />
-      <main className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto", !isHome && "px-4 pt-4 pb-6 md:px-6 md:pt-6")}>{children}</main>
+      <main className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto", !isHome && "px-4 pt-2 pb-6 md:px-6 md:pt-3")}>{children}</main>
     </div>
   );
 }

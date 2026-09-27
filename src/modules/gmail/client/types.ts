@@ -10,8 +10,9 @@ export interface EmailSummary {
 export interface EmailDetail extends EmailSummary {
   to: string;
   body: string;
+  bodyHtml?: string;
 }
 
 /** Mirrors `InboxFilter` in `@/lib/integrations/gmail` — duplicated here so client
  *  components never import from a module that reads secrets on the server. */
-export type InboxFilter = "today-unread" | "unread" | "today" | "all";
+export type InboxFilter = "recent" | "today" | "month" | "all";

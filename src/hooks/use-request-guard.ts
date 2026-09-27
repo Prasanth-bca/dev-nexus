@@ -17,5 +17,10 @@ export function useRequestGuard() {
   const tokenRef = useRef(0);
   const start = useCallback(() => ++tokenRef.current, []);
   const isCurrent = useCallback((token: number) => token === tokenRef.current, []);
-  return { start, isCurrent };
+  // start/isCurrent are stable (empty deps), but returning a fresh object literal every render
+  // still breaks any useCallback that lists this hook's return value as a dependency — that
+  // callback's identity changes every render too, which can refire an effect that depends on
+  // it in an infinite loop (RepoDetail's branches/commits/pulls/issues fetch did exactly this).
+  const guardRef = useRef({ start, isCurrent });
+  return guardRef.current;
 }

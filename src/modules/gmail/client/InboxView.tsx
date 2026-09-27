@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Inbox, Mail, MailOpen, Search, Sun } from "lucide-react";
+import { CalendarDays, Clock, Inbox, Search, Sun } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { getModuleAccent } from "@/lib/icon-map";
@@ -13,27 +13,27 @@ import type { EmailDetail, EmailSummary, InboxFilter } from "./types";
 
 const ACCENT = getModuleAccent("gmail");
 
-const FILTERS: { value: InboxFilter; label: string; icon: typeof Mail; emptyTitle: string; emptyBody: string }[] = [
+const FILTERS: { value: InboxFilter; label: string; icon: typeof Clock; emptyTitle: string; emptyBody: string }[] = [
   {
-    value: "today-unread",
-    label: "Today",
-    icon: Sun,
-    emptyTitle: "Nothing new today",
-    emptyBody: "No unread mail has arrived today. Try Unread or All to look further back.",
-  },
-  {
-    value: "unread",
-    label: "Unread",
-    icon: Mail,
-    emptyTitle: "Inbox zero",
-    emptyBody: "Nothing unread in your inbox.",
+    value: "recent",
+    label: "Recent",
+    icon: Clock,
+    emptyTitle: "No mail yet",
+    emptyBody: "Your most recent messages will show up here.",
   },
   {
     value: "today",
-    label: "All today",
-    icon: MailOpen,
+    label: "Today",
+    icon: Sun,
     emptyTitle: "No mail today",
     emptyBody: "Nothing has arrived in your inbox today.",
+  },
+  {
+    value: "month",
+    label: "This month",
+    icon: CalendarDays,
+    emptyTitle: "No mail this month",
+    emptyBody: "Nothing in the last 30 days.",
   },
   {
     value: "all",
@@ -47,8 +47,9 @@ const FILTERS: { value: InboxFilter; label: string; icon: typeof Mail; emptyTitl
 export function InboxView() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-  // Defaults to today's unread — the triage view you actually want on arrival.
-  const [filter, setFilter] = useState<InboxFilter>("today-unread");
+  // Defaults to today's mail only — cheapest IMAP-side filter and the triage view you
+  // actually want on arrival, instead of pulling recent messages across all history.
+  const [filter, setFilter] = useState<InboxFilter>("today");
   const [messages, setMessages] = useState<EmailSummary[] | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   // Lazily seeded from ?open=<id> (Global Search deep link) so the correct message/loading

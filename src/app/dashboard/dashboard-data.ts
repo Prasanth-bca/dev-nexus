@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { getModules } from "@/modules/loaded";
 import { listSecretNames } from "@/lib/kernel/secrets";
+import { getUnreadCountToday } from "@/lib/integrations/gmail";
 import { getCurrentUserId } from "@/lib/kernel/auth-current-user";
 import { getUserById } from "@/lib/kernel/auth-password";
 import type { DashboardWidget } from "@/lib/kernel/types";
@@ -68,6 +69,17 @@ export async function getModuleStatValue(moduleId: string): Promise<number> {
   const value = data?.widget.stat?.value;
   return typeof value === "number" ? value : Number(value) || 0;
 }
+
+/** Today's unread count specifically, for the Workspace Overview strip — distinct from the
+ *  Gmail module's own widget stat (all-time unread), which stays as-is for the app grid card. */
+export const getGmailUnreadToday = cache(async (): Promise<number> => {
+  try {
+    return await getUnreadCountToday();
+  } catch {
+    // Not connected, or the request failed — same graceful-degradation as the module's own widget().
+    return 0;
+  }
+});
 
 /**
  * First name for the hero greeting. Prefers the profile's display name (Settings → Profile)

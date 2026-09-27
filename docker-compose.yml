@@ -30,6 +30,19 @@ services:
       retries: 5
       start_period: 10s
 
+  redis:
+    image: redis:7-alpine
+    container_name: dev-nexus-redis
+    restart: unless-stopped
+    # No published port / volume — this is a cache in front of MongoDB, not a data store.
+    # If it's ever wiped, everything just re-populates from Mongo/IMAP on next read/sync.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
   app:
     build:
       context: .
@@ -44,6 +57,8 @@ services:
       # Connect to MongoDB container via service name
       - MONGODB_URI=mongodb://mongodb:27017
       - MONGODB_DB=dev_nexus
+      # Redis cache in front of Mongo-synced Gmail data (see gmail-cache.ts)
+      - REDIS_URL=redis://redis:6379
       # Point writable directories at the bind-mounted host volumes
       - FILE_VAULT_DIR=/data/var/file-vault
       - AVATAR_DIR=/data/var/avatars
@@ -56,6 +71,8 @@ services:
       - dnx-transformers-cache:/app/.cache
     depends_on:
       mongodb:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/auth/status || exit 1"]

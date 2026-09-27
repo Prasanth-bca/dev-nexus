@@ -1,94 +1,92 @@
+import * as imaps from "imap-simple";
+import { simpleParser } from "mailparser";
+import * as nodemailer from "nodemailer";
 import { getSecret } from "@/lib/kernel/secrets";
-import { EXTERNAL_FETCH_TIMEOUT_MS } from "@/lib/fetch-timeout";
+import { getDb } from "@/lib/kernel/db";
+import { cacheGet, cacheSet, cacheSetList, cacheDel, clearListCache } from "./gmail-cache";
+
+type AddressObject = any;
 
 /**
- * Shared Gmail API client — lives here (not inside the `gmail` module) so it can be used by
- * both the Gmail module itself and other modules (currently AI Assistant's tools) without
- * one module importing another's internals directly, which the module contract disallows.
- * Auth is via the refresh token the `gmail` module's OAuth flow already stored in Secret Manager.
+ * Gmail integration via IMAP/SMTP + App Passwords, backed by a Mongo-synced local copy.
+ *
+ * Reads (list/detail/unread counts/search) never talk to IMAP directly — a background sync
+ * loop (gmail-sync.ts) is the only thing that fetches from Gmail, into the `gmail_messages`
+ * collection, and reads go through a short-TTL Redis cache in front of that collection
+ * (gmail-cache.ts). Mutations that must be live (mark-as-read, send) still touch Gmail
+ * directly, and also update Mongo + invalidate the cache immediately.
  */
 
-const TOKEN_URL = "https://oauth2.googleapis.com/token";
-const API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
+const IMAP_CONFIG = {
+  host: "imap.gmail.com",
+  port: 993,
+  tls: true,
+  tlsOptions: { rejectUnauthorized: true, servername: "imap.gmail.com" },
+  authTimeout: 10000,
+};
 
-interface GmailHeader {
-  name: string;
-  value: string;
-}
+const SMTP_CONFIG = {
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  tls: { servername: "smtp.gmail.com" },
+};
 
-interface GmailApiError {
-  error?: { message?: string };
+export const MESSAGES_COLLECTION = "gmail_messages";
+
+interface ImapConnection {
+  connection: imaps.ImapSimple;
+  email: string;
 }
 
 declare global {
-  var _devNexusGmailToken: { value: string; expiresAt: number } | undefined;
-  var _devNexusGmailTokenRefresh: Promise<{ value: string; expiresAt: number }> | undefined;
+  var _devNexusImapConnection: ImapConnection | undefined;
 }
 
-async function refreshAccessToken(): Promise<{ value: string; expiresAt: number }> {
-  const clientId = await getSecret("GMAIL_CLIENT_ID");
-  const clientSecret = await getSecret("GMAIL_CLIENT_SECRET");
-  const refreshToken = await getSecret("GMAIL_REFRESH_TOKEN");
-
-  const res = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: "refresh_token",
-    }),
-    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
-  });
-  if (!res.ok) throw new Error(`Gmail token refresh failed (${res.status}): ${await res.text()}`);
-  const data = await res.json();
-  // Google access tokens last ~1h. Expire ours a minute early so a token can't
-  // lapse mid-flight on a request that's already been authorised.
-  const ttlSeconds = typeof data.expires_in === "number" ? data.expires_in : 3600;
-  return { value: data.access_token, expiresAt: Date.now() + (ttlSeconds - 60) * 1000 };
-}
-
-/**
- * Cached on `global` (same pattern as the Mongo client) because this used to run on
- * *every* API call — listing 20 messages meant 21 token refreshes on top of 21 data
- * requests, which is what made the inbox take tens of seconds to load.
- */
-async function getAccessToken(): Promise<string> {
-  const cached = global._devNexusGmailToken;
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
-
-  // De-duplicate concurrent refreshes — without this, multiple Gmail-backed requests arriving
-  // right when the cached token has just expired (e.g. the AI Assistant calling
-  // list_unread_emails while the Inbox view is also loading) each independently hit Google's
-  // token endpoint at once instead of sharing the one refresh already in flight.
-  if (!global._devNexusGmailTokenRefresh) {
-    global._devNexusGmailTokenRefresh = refreshAccessToken().finally(() => {
-      global._devNexusGmailTokenRefresh = undefined;
-    });
+export async function getImapConnection(): Promise<ImapConnection> {
+  if (global._devNexusImapConnection) {
+    try {
+      // Test if connection is still alive
+      await global._devNexusImapConnection.connection.getBoxes();
+      return global._devNexusImapConnection;
+    } catch {
+      global._devNexusImapConnection = undefined;
+    }
   }
-  const fresh = await global._devNexusGmailTokenRefresh;
-  global._devNexusGmailToken = fresh;
-  return fresh.value;
-}
 
-/** Called when credentials change, so a stale token can't outlive the account it belongs to. */
-export function invalidateGmailToken(): void {
-  global._devNexusGmailToken = undefined;
-}
+  const email = await getSecret("GMAIL_EMAIL");
+  const password = await getSecret("GMAIL_APP_PASSWORD");
 
-async function gmailFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = await getAccessToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: { ...(init?.headers || {}), Authorization: `Bearer ${token}`, "content-type": "application/json" },
-    signal: AbortSignal.timeout(EXTERNAL_FETCH_TIMEOUT_MS),
+  const connection = await imaps.connect({
+    imap: {
+      ...IMAP_CONFIG,
+      user: email,
+      password,
+    },
   });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as GmailApiError;
-    throw new Error(`Gmail API ${path} failed (${res.status}): ${body.error?.message ?? res.statusText}`);
+
+  global._devNexusImapConnection = { connection, email };
+  return global._devNexusImapConnection;
+}
+
+async function getSmtpTransporter(): Promise<{ email: string; transporter: nodemailer.Transporter }> {
+  const email = await getSecret("GMAIL_EMAIL");
+  const password = await getSecret("GMAIL_APP_PASSWORD");
+
+  const transporter = nodemailer.createTransport({
+    ...SMTP_CONFIG,
+    auth: { user: email, pass: password },
+  });
+
+  return { email, transporter };
+}
+
+export async function invalidateGmailToken(): Promise<void> {
+  if (global._devNexusImapConnection) {
+    global._devNexusImapConnection.connection.end();
+    global._devNexusImapConnection = undefined;
   }
-  return res.json();
+  await clearListCache();
 }
 
 export interface UnreadEmail {
@@ -100,123 +98,45 @@ export interface UnreadEmail {
   unread: boolean;
 }
 
-/**
- * Runs a raw Gmail search query and fetches metadata for each hit.
- *
- * Gmail's list endpoint returns only ids, so a second request per message is
- * unavoidable — but those run concurrently rather than in series. Promise.all
- * preserves input order, so results keep Gmail's own newest-first ordering.
- */
-async function fetchMessages(query: string, maxResults: number): Promise<UnreadEmail[]> {
-  const list = await gmailFetch<{ messages?: Array<{ id: string }> }>(
-    `/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`
-  );
-  const ids = (list.messages ?? []).map((m) => m.id);
-
-  return Promise.all(
-    ids.map(async (id) => {
-      const msg = await gmailFetch<{ snippet?: string; labelIds?: string[]; payload?: { headers?: GmailHeader[] } }>(
-        `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`
-      );
-      const headers = msg.payload?.headers ?? [];
-      const get = (name: string) => headers.find((h) => h.name === name)?.value ?? "";
-      return {
-        id,
-        from: get("From"),
-        subject: get("Subject"),
-        snippet: msg.snippet ?? "",
-        date: get("Date"),
-        unread: (msg.labelIds ?? []).includes("UNREAD"),
-      };
-    })
-  );
+export interface EmailDetail extends UnreadEmail {
+  to: string;
+  body: string;
+  bodyHtml?: string;
 }
 
-export const INBOX_FILTERS = ["today-unread", "unread", "today", "all"] as const;
-export type InboxFilter = (typeof INBOX_FILTERS)[number];
-
-export function isInboxFilter(value: string): value is InboxFilter {
-  return (INBOX_FILTERS as readonly string[]).includes(value);
+/** The permanent, synced copy of a message — one doc per Gmail UID. */
+export interface GmailMessageDoc {
+  _id: string;
+  from: string;
+  to: string;
+  subject: string;
+  snippet: string;
+  body: string;
+  bodyHtml?: string;
+  date: Date;
+  unread: boolean;
+  syncedAt: Date;
 }
 
-/** Start of the current local day, as Unix seconds. */
-function startOfTodayEpoch(): number {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return Math.floor(d.getTime() / 1000);
-}
-
-/**
- * Builds the Gmail query for a filter.
- *
- * `after:` is given an epoch timestamp rather than a YYYY/MM/DD date: Gmail treats
- * bare dates inconsistently at the day boundary (so "Today" could return nothing on
- * the day itself), whereas an epoch second is exact. Since Dev Nexus runs locally,
- * the server's midnight is the user's midnight.
- *
- * Caveat: epoch input to `after:` is long-standing but *undocumented* Gmail behaviour.
- * If the Today filters ever start coming back empty despite mail having arrived, that
- * is the first thing to suspect — swap to `newer_than:1d` (a rolling 24h window,
- * documented, but not calendar-day accurate).
- */
-function filterQuery(filter: InboxFilter): string {
-  switch (filter) {
-    case "today-unread":
-      return `in:inbox is:unread after:${startOfTodayEpoch()}`;
-    case "unread":
-      return "in:inbox is:unread";
-    case "today":
-      return `in:inbox after:${startOfTodayEpoch()}`;
-    case "all":
-      return "in:inbox";
+function getFirstAddress(addr: string | AddressObject | AddressObject[] | undefined): string {
+  if (!addr) return "";
+  if (typeof addr === "string") return addr;
+  if (Array.isArray(addr)) {
+    const first = addr[0];
+    return first ? `${first.name || ""} <${first.address}>`.trim() : "";
   }
+  return addr.value?.[0] ? `${addr.value[0].name || ""} <${addr.value[0].address}>`.trim() : "";
 }
 
-export async function listUnreadEmails(maxResults = 10): Promise<UnreadEmail[]> {
-  return fetchMessages("is:unread", maxResults);
-}
-
-/** Free-text search across all mail (not just the inbox) — powers Global Search. */
-export async function searchEmails(query: string, maxResults = 5): Promise<UnreadEmail[]> {
-  return fetchMessages(query, maxResults);
-}
-
-/**
- * The Inbox view's listing. A free-text term is scoped *within* the active filter,
- * so the chips behave like filters rather than being silently overridden by search.
- */
-export async function listInbox(filter: InboxFilter = "all", search = "", maxResults = 25): Promise<UnreadEmail[]> {
-  const term = search.trim();
-  const query = term ? `${filterQuery(filter)} ${term}` : filterQuery(filter);
-  return fetchMessages(query, maxResults);
-}
-
-/** True unread total (not capped by a maxResults page) — powers the Dashboard widget's headline stat. */
-export async function getUnreadCount(): Promise<number> {
-  const label = await gmailFetch<{ messagesUnread?: number }>("/labels/UNREAD");
-  return label.messagesUnread ?? 0;
-}
-
-interface GmailPart {
-  mimeType?: string;
-  body?: { data?: string };
-  parts?: GmailPart[];
-}
-
-function decodeBase64Url(data: string): string {
-  return Buffer.from(data, "base64url").toString("utf-8");
-}
-
-function findPart(payload: GmailPart, mimeType: string): GmailPart | null {
-  if (payload.mimeType === mimeType && payload.body?.data) return payload;
-  for (const part of payload.parts ?? []) {
-    const found = findPart(part, mimeType);
-    if (found) return found;
+function formatAddresses(addr: string | AddressObject | AddressObject[] | undefined): string {
+  if (!addr) return "";
+  if (typeof addr === "string") return addr;
+  if (Array.isArray(addr)) {
+    return addr.map((a: any) => `${a.name || ""} <${a.address}>`.trim()).join(", ");
   }
-  return null;
+  return addr.value?.map((a: any) => `${a.name || ""} <${a.address}>`.trim()).join(", ") || "";
 }
 
-/** Crude but safe HTML→text conversion — emails only ever get rendered as plain text, never as raw HTML (XSS risk on untrusted content). */
 function htmlToText(html: string): string {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, "")
@@ -234,73 +154,256 @@ function htmlToText(html: string): string {
     .trim();
 }
 
-function extractBody(payload: GmailPart): string {
-  const plain = findPart(payload, "text/plain");
-  if (plain?.body?.data) return decodeBase64Url(plain.body.data);
+export const INBOX_FILTERS = ["recent", "today", "month", "all"] as const;
+export type InboxFilter = (typeof INBOX_FILTERS)[number];
 
-  const html = findPart(payload, "text/html");
-  if (html?.body?.data) return htmlToText(decodeBase64Url(html.body.data));
-
-  return "(No readable content in this message.)";
+export function isInboxFilter(value: string): value is InboxFilter {
+  return (INBOX_FILTERS as readonly string[]).includes(value);
 }
 
-export interface EmailDetail extends UnreadEmail {
+// How many messages a request can return per filter — kept small for "today" since that's
+// the default/common case, larger where the filter is an explicit, less-frequent opt-in
+// (month/all), and capped even for "all" so a huge synced history can't make a page load
+// pull down everything ever synced.
+export const FILTER_LIMITS: Record<InboxFilter, number> = {
+  recent: 10,
+  today: 20,
+  month: 100,
+  all: 100,
+};
+
+export function startOfTodayEpoch(): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+// Fetches only matching UIDs (cheap — no bodies). Used by the background sync loop to find
+// what's changed since the last tick.
+export function searchUids(connection: imaps.ImapSimple, criteria: any[]): Promise<number[]> {
+  return new Promise((resolve, reject) => {
+    connection.imap.search(criteria, (err, uids) => {
+      if (err) reject(err);
+      else resolve(uids || []);
+    });
+  });
+}
+
+export interface ParsedGmailMessage {
+  uid: number;
+  from: string;
   to: string;
+  subject: string;
+  snippet: string;
   body: string;
+  bodyHtml?: string;
+  date: string;
+  unread: boolean;
 }
 
-export async function getEmail(id: string): Promise<EmailDetail> {
-  const msg = await gmailFetch<{
-    snippet?: string;
-    labelIds?: string[];
-    payload?: GmailPart & { headers?: GmailHeader[] };
-  }>(`/messages/${id}?format=full`);
+// Fetches and fully parses one message by UID — the only place that talks to IMAP for a
+// message body. Used by the background sync loop for newly-seen UIDs, and as a live
+// fallback from getEmail() for a message that hasn't been synced yet.
+export async function fetchOneByUid(connection: imaps.ImapSimple, uid: number): Promise<ParsedGmailMessage | null> {
+  // Fetch the full raw message so mailparser sees real headers and can correctly decode
+  // multipart/MIME bodies — a HEADER-only part comes back from imap-simple pre-parsed into
+  // an object, not raw text, and a bare TEXT part has no Content-Type to tell mailparser
+  // it's multipart.
+  const results = await connection.search([["UID", uid]], {
+    bodies: [""],
+    struct: true,
+  });
+  const item = results[0];
+  if (!item) return null;
 
-  const headers = msg.payload?.headers ?? [];
-  const get = (name: string) => headers.find((h) => h.name === name)?.value ?? "";
+  const all = item.parts.find((p) => p.which === "");
+  const parsed = await simpleParser(all?.body || "");
+  const body = parsed.text || (parsed.html ? htmlToText(parsed.html) : "(No readable content)");
+  const bodyHtml = parsed.html || undefined;
 
   return {
-    id,
-    from: get("From"),
-    to: get("To"),
-    subject: get("Subject"),
-    date: get("Date"),
-    snippet: msg.snippet ?? "",
-    unread: (msg.labelIds ?? []).includes("UNREAD"),
-    body: msg.payload ? extractBody(msg.payload) : "(No readable content in this message.)",
+    uid: item.attributes.uid,
+    from: getFirstAddress(parsed.from),
+    to: formatAddresses(parsed.to),
+    subject: parsed.subject || "(No subject)",
+    snippet: body.slice(0, 200).replace(/\s+/g, " ").trim(),
+    body,
+    bodyHtml,
+    date: parsed.date?.toISOString() || new Date().toISOString(),
+    unread: !item.attributes.flags.includes("\\Seen"),
   };
 }
 
-async function findOrCreateLabelId(name: string): Promise<string> {
-  const list = await gmailFetch<{ labels?: Array<{ id: string; name: string }> }>("/labels");
-  const existing = (list.labels ?? []).find((l) => l.name.toLowerCase() === name.toLowerCase());
-  if (existing) return existing.id;
-
-  const created = await gmailFetch<{ id: string }>("/labels", {
-    method: "POST",
-    body: JSON.stringify({ name, labelListVisibility: "labelShow", messageListVisibility: "show" }),
-  });
-  return created.id;
+// One UID per FETCH, run in parallel — NOT a single batched `["UID", ...uids]` search.
+// node-imap hangs forever parsing a response with multiple large full-body literals back
+// to back; fetching each message's full body separately sidesteps that bug and is still
+// fast in parallel (confirmed: 10 full messages in ~8s vs. an indefinite hang).
+export async function fetchMessagesByUid(connection: imaps.ImapSimple, uids: number[]): Promise<ParsedGmailMessage[]> {
+  if (uids.length === 0) return [];
+  const messages = await Promise.all(uids.map((uid) => fetchOneByUid(connection, uid)));
+  return messages.filter((m): m is ParsedGmailMessage => m !== null);
 }
 
-export async function addLabelToEmail(messageId: string, labelName: string): Promise<void> {
-  const labelId = await findOrCreateLabelId(labelName);
-  await gmailFetch(`/messages/${messageId}/modify`, {
-    method: "POST",
-    body: JSON.stringify({ addLabelIds: [labelId] }),
+const LIST_CACHE_TTL_SECONDS = 20;
+const DETAIL_CACHE_TTL_SECONDS = 60;
+
+function docToUnreadEmail(doc: GmailMessageDoc): UnreadEmail {
+  return {
+    id: doc._id,
+    from: doc.from,
+    subject: doc.subject,
+    snippet: doc.snippet,
+    date: doc.date.toISOString(),
+    unread: doc.unread,
+  };
+}
+
+function buildMongoQuery(filter: InboxFilter, search: string): Record<string, unknown> {
+  const query: Record<string, unknown> = {};
+
+  if (filter === "today") {
+    query.date = { $gte: new Date(startOfTodayEpoch() * 1000) };
+  } else if (filter === "month") {
+    const monthAgo = new Date(startOfTodayEpoch() * 1000);
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    query.date = { $gte: monthAgo };
+  }
+  // "recent" and "all" have no date bound — the sort+limit alone decides scope.
+
+  const term = search.trim();
+  if (term) {
+    const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    query.$or = [{ subject: re }, { body: re }];
+  }
+
+  return query;
+}
+
+export async function listInbox(
+  filter: InboxFilter = "all",
+  search = "",
+  maxResults = 25
+): Promise<UnreadEmail[]> {
+  const cacheKey = `gmail:list:${filter}:${search.trim().toLowerCase()}`;
+  const cached = await cacheGet<UnreadEmail[]>(cacheKey);
+  if (cached) return cached;
+
+  const db = await getDb();
+  const query = buildMongoQuery(filter, search);
+  const docs = await db
+    .collection<GmailMessageDoc>(MESSAGES_COLLECTION)
+    .find(query, { projection: { body: 0, to: 0 } })
+    .sort({ date: -1 })
+    .limit(maxResults)
+    .toArray();
+  const messages = docs.map(docToUnreadEmail);
+
+  await cacheSetList(cacheKey, messages, LIST_CACHE_TTL_SECONDS);
+  return messages;
+}
+
+export async function listUnreadEmails(maxResults = 10): Promise<UnreadEmail[]> {
+  const db = await getDb();
+  const docs = await db
+    .collection<GmailMessageDoc>(MESSAGES_COLLECTION)
+    .find({ unread: true }, { projection: { body: 0, to: 0 } })
+    .sort({ date: -1 })
+    .limit(maxResults)
+    .toArray();
+  return docs.map(docToUnreadEmail);
+}
+
+export async function searchEmails(query: string, maxResults = 5): Promise<UnreadEmail[]> {
+  return listInbox("all", query, maxResults);
+}
+
+export async function getUnreadCount(): Promise<number> {
+  const db = await getDb();
+  return db.collection<GmailMessageDoc>(MESSAGES_COLLECTION).countDocuments({ unread: true });
+}
+
+export async function getUnreadCountToday(): Promise<number> {
+  const db = await getDb();
+  return db.collection<GmailMessageDoc>(MESSAGES_COLLECTION).countDocuments({
+    unread: true,
+    date: { $gte: new Date(startOfTodayEpoch() * 1000) },
   });
+}
+
+export async function getEmail(id: string): Promise<EmailDetail> {
+  const cacheKey = `gmail:detail:${id}`;
+  const cached = await cacheGet<EmailDetail>(cacheKey);
+  if (cached) return cached;
+
+  const db = await getDb();
+  const collection = db.collection<GmailMessageDoc>(MESSAGES_COLLECTION);
+  let doc = await collection.findOne({ _id: id });
+
+  if (!doc) {
+    // Not synced yet — brand-new mail still inside the current sync interval, or a deep
+    // link older than the sync window. Fetch it live once and backfill Mongo so every
+    // later read (including this same message again) comes from the DB.
+    const { connection } = await getImapConnection();
+    await connection.openBox("INBOX");
+    const parsed = await fetchOneByUid(connection, parseInt(id, 10));
+    if (!parsed) throw new Error("Email not found");
+
+    doc = {
+      _id: id,
+      from: parsed.from,
+      to: parsed.to,
+      subject: parsed.subject,
+      snippet: parsed.snippet,
+      body: parsed.body,
+      bodyHtml: parsed.bodyHtml,
+      date: new Date(parsed.date),
+      unread: parsed.unread,
+      syncedAt: new Date(),
+    };
+    await collection.updateOne({ _id: id }, { $set: doc }, { upsert: true });
+  }
+
+  const detail: EmailDetail = {
+    id: doc._id,
+    from: doc.from,
+    to: doc.to,
+    subject: doc.subject,
+    snippet: doc.snippet,
+    date: doc.date.toISOString(),
+    unread: doc.unread,
+    body: doc.body,
+    bodyHtml: doc.bodyHtml,
+  };
+  await cacheSet(cacheKey, detail, DETAIL_CACHE_TTL_SECONDS);
+  return detail;
 }
 
 export async function markEmailAsRead(messageId: string): Promise<void> {
-  await gmailFetch(`/messages/${messageId}/modify`, {
-    method: "POST",
-    body: JSON.stringify({ removeLabelIds: ["UNREAD"] }),
-  });
+  const db = await getDb();
+  await db.collection<GmailMessageDoc>(MESSAGES_COLLECTION).updateOne({ _id: messageId }, { $set: { unread: false } });
+
+  // Best-effort — also flag it \Seen on the actual mailbox so other Gmail clients agree.
+  // Mongo (read by Dev Nexus's own UI) is already updated above regardless of this outcome.
+  try {
+    const { connection } = await getImapConnection();
+    await connection.openBox("INBOX");
+    await connection.addFlags(parseInt(messageId, 10), "\\Seen");
+  } catch (err) {
+    console.error("[gmail] failed to sync \\Seen flag to IMAP", err);
+  }
+
+  await clearListCache();
+  await cacheDel(`gmail:detail:${messageId}`);
+}
+
+// IMAP doesn't have native label support like Gmail API — labels would need to be folders.
+// For now, this is a no-op (or we could move to a folder).
+export async function addLabelToEmail(_messageId: string, _labelName: string): Promise<void> {
+  // For now, just no-op.
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Validates a comma-separated address list (used for To/Cc/Bcc). An empty string is valid — it just means "not set". */
 export function isValidEmailList(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed) return true;
@@ -310,26 +413,23 @@ export function isValidEmailList(value: string): boolean {
     .every((s) => s.length > 0 && EMAIL_RE.test(s));
 }
 
-/** Strips CR/LF so a header value can never smuggle an extra header (e.g. a hidden Bcc) into
- *  the raw RFC822 message below — `subject` in particular reaches here unvalidated by the
- *  EMAIL_RE check that only ever applied to to/cc/bcc, and can originate from the AI
- *  Assistant's send_email tool, whose arguments the model can populate from email content
- *  it previously read. */
-function sanitizeHeaderValue(value: string): string {
-  return value.replace(/[\r\n]+/g, " ").trim();
-}
+export async function sendEmail(params: {
+  to: string;
+  cc?: string;
+  bcc?: string;
+  subject: string;
+  body: string;
+}): Promise<{ id: string }> {
+  const { transporter } = await getSmtpTransporter();
 
-/** Requires the gmail.send scope — connections made before that scope existed need to reconnect. */
-export async function sendEmail(params: { to: string; cc?: string; bcc?: string; subject: string; body: string }): Promise<{ id: string }> {
-  const headers = [`To: ${sanitizeHeaderValue(params.to)}`];
-  if (params.cc?.trim()) headers.push(`Cc: ${sanitizeHeaderValue(params.cc)}`);
-  if (params.bcc?.trim()) headers.push(`Bcc: ${sanitizeHeaderValue(params.bcc)}`);
-  headers.push(`Subject: ${sanitizeHeaderValue(params.subject)}`, `Content-Type: text/plain; charset="UTF-8"`, "", params.body);
-
-  const raw = Buffer.from(headers.join("\r\n")).toString("base64url");
-
-  return gmailFetch<{ id: string }>("/messages/send", {
-    method: "POST",
-    body: JSON.stringify({ raw }),
+  const info = await transporter.sendMail({
+    from: (await getSecret("GMAIL_EMAIL")),
+    to: params.to,
+    cc: params.cc,
+    bcc: params.bcc,
+    subject: params.subject,
+    text: params.body,
   });
+
+  return { id: info.messageId };
 }

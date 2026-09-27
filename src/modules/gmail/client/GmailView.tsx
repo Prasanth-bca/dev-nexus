@@ -11,13 +11,11 @@ import { GmailSettingsView } from "./GmailSettingsView";
 const ACCENT = getModuleAccent("gmail");
 
 export function GmailView({
-  initialConfigured,
   initialConnected,
-  redirectUri,
+  initialEmail,
 }: {
-  initialConfigured: boolean;
   initialConnected: boolean;
-  redirectUri: string;
+  initialEmail: string;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -29,7 +27,7 @@ export function GmailView({
       />
 
       <Tabs defaultValue={initialConnected ? "inbox" : "settings"} className="flex flex-1 min-h-0 flex-col">
-        <TabsList className="mb-4 self-start">
+        <TabsList className="mb-2 self-start">
           <TabsTrigger value="inbox">Inbox</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -49,7 +47,7 @@ export function GmailView({
         </TabsContent>
 
         <TabsContent value="settings">
-          <GmailSettingsView initialConfigured={initialConfigured} initialConnected={initialConnected} redirectUri={redirectUri} />
+          <GmailSettingsView initialConnected={initialConnected} initialEmail={initialEmail} />
         </TabsContent>
       </Tabs>
     </div>

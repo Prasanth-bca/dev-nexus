@@ -1,4 +1,5 @@
-import { getUnreadCount, listUnreadEmails, searchEmails } from "@/lib/integrations/gmail";
+import { getUnreadCount, listUnreadEmails, MESSAGES_COLLECTION, searchEmails } from "@/lib/integrations/gmail";
+import { ensureGmailSyncStarted } from "@/lib/integrations/gmail-sync";
 import type { DevNexusModule } from "@/lib/kernel/types";
 import { manifest } from "./manifest";
 import { buildRoutes } from "./server/routes";
@@ -12,6 +13,11 @@ export const gmailModule: DevNexusModule = {
       routes: buildRoutes(ctx),
       pages: [{ path: "/", component: () => <GmailPage ctx={ctx} /> }],
     };
+  },
+
+  async onEnable(ctx) {
+    await ctx.db.collection(MESSAGES_COLLECTION).createIndex({ date: -1 });
+    ensureGmailSyncStarted();
   },
 
   async search(_ctx, query) {

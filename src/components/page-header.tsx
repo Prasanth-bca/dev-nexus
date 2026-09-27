@@ -18,7 +18,7 @@ export function PageHeader({ title, description, actions, icon: Icon, accent = "
   return (
     <div
       style={{ "--accent": accent } as React.CSSProperties}
-      className={cn("mb-6 flex items-start justify-between gap-4", className)}
+      className={cn("mb-3 flex items-start justify-between gap-4", className)}
     >
       <div className="flex min-w-0 items-center gap-3">
         {Icon && (

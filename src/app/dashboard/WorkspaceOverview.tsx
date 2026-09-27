@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { FolderGit2, KeyRound, LayoutGrid, Mail, Vault } from "lucide-react";
-import { getEnabledModuleCount, getModuleStatValue, getSecretCount } from "./dashboard-data";
+import { getEnabledModuleCount, getGmailUnreadToday, getModuleStatValue, getSecretCount } from "./dashboard-data";
 import { HeroStat, HeroStatSkeleton } from "./HeroStat";
 
 /**
@@ -17,7 +17,7 @@ export function WorkspaceOverview() {
           <HeroStat label="Modules Active" icon={LayoutGrid} accent="var(--primary)" load={getEnabledModuleCount} />
         </Suspense>
         <Suspense fallback={<HeroStatSkeleton />}>
-          <HeroStat label="Unread" icon={Mail} accent="var(--module-gmail)" load={() => getModuleStatValue("gmail")} />
+          <HeroStat label="Unread today" icon={Mail} accent="var(--module-gmail)" load={getGmailUnreadToday} />
         </Suspense>
         <Suspense fallback={<HeroStatSkeleton />}>
           <HeroStat label="Repos" icon={FolderGit2} accent="var(--module-github)" load={() => getModuleStatValue("github")} />
