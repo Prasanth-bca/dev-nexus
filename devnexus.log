@@ -4,484 +4,701 @@
 
 ▲ Next.js 16.2.12 (Turbopack)
 - Local:         http://localhost:3000
-- Network:       http://192.168.207.83:3000
+- Network:       http://192.168.29.186:3000
 - Environments: .env.local
-✓ Ready in 525ms
+✓ Ready in 419ms
 
+○ Compiling /dashboard/[moduleId] ...
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[notes] enabled 
+[activity] enabled 
+[ai-assistant] enabled 
+[projects] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 2.8s (next.js: 632ms, proxy.ts: 138ms, application-code: 2.0s)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 2.7s (next.js: 2.6s, proxy.ts: 6ms, application-code: 157ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+[projects] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 2.4s (next.js: 1175ms, proxy.ts: 5ms, application-code: 1226ms)
+ GET /dashboard 200 in 1168ms (next.js: 19ms, proxy.ts: 39ms, application-code: 1110ms)
+ GET /dashboard 200 in 765ms (next.js: 4ms, proxy.ts: 75ms, application-code: 686ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 1640ms (next.js: 4ms, proxy.ts: 6ms, application-code: 1630ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 262ms (next.js: 70ms, proxy.ts: 4ms, application-code: 188ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 5.7s (next.js: 204ms, proxy.ts: 567ms, application-code: 4.9s)
+ GET /api/modules/gmail/messages?filter=today 200 in 160ms (next.js: 75ms, proxy.ts: 8ms, application-code: 77ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 1730ms (next.js: 1482ms, proxy.ts: 19ms, application-code: 229ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 164ms (next.js: 75ms, proxy.ts: 6ms, application-code: 83ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 1948ms (next.js: 1755ms, proxy.ts: 7ms, application-code: 186ms)
+ GET /api/modules/gmail/messages?filter=recent 200 in 172ms (next.js: 69ms, proxy.ts: 4ms, application-code: 98ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=recent 200 in 417ms (next.js: 198ms, proxy.ts: 38ms, application-code: 180ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 78ms (next.js: 6ms, proxy.ts: 6ms, application-code: 66ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 1007ms (next.js: 145ms, proxy.ts: 26ms, application-code: 836ms)
+ GET /dashboard 200 in 919ms (next.js: 4ms, proxy.ts: 4ms, application-code: 910ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 148ms (next.js: 59ms, proxy.ts: 9ms, application-code: 80ms)
+ GET /dashboard 200 in 1096ms (next.js: 6ms, proxy.ts: 8ms, application-code: 1082ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=recent 200 in 129ms (next.js: 54ms, proxy.ts: 6ms, application-code: 70ms)
+ GET /dashboard/projects 200 in 263ms (next.js: 65ms, proxy.ts: 4ms, application-code: 194ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /dashboard/projects?project=svcf-project 200 in 279ms (next.js: 80ms, proxy.ts: 6ms, application-code: 192ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/projects/6ab7aab3500f800993579ece/overview 200 in 180ms (next.js: 81ms, proxy.ts: 6ms, application-code: 94ms)
 [notes] enabled 
- GET /dashboard 200 in 1561ms (next.js: 10ms, proxy.ts: 15ms, application-code: 1536ms)
+[ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/projects/6ab7aab3500f800993579ece/contacts 200 in 136ms (next.js: 75ms, proxy.ts: 5ms, application-code: 55ms)
+[notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/github/status 200 in 459ms (next.js: 7ms, proxy.ts: 6ms, application-code: 447ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
+ GET /api/modules/github/status 200 in 518ms (next.js: 77ms, proxy.ts: 6ms, application-code: 435ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1407ms (next.js: 17ms, proxy.ts: 23ms, application-code: 1367ms)
- GET /dashboard 200 in 1643ms (next.js: 44ms, proxy.ts: 61ms, application-code: 1538ms)
+ GET /api/modules/projects/6ab7aab3500f800993579ece/overview 200 in 115ms (next.js: 11ms, proxy.ts: 25ms, application-code: 79ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1321ms (next.js: 13ms, proxy.ts: 21ms, application-code: 1286ms)
+ GET /api/modules/github/status 200 in 464ms (next.js: 83ms, proxy.ts: 5ms, application-code: 376ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1309ms (next.js: 7ms, proxy.ts: 7ms, application-code: 1294ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1292ms (next.js: 13ms, proxy.ts: 17ms, application-code: 1261ms)
+ GET /api/modules/notes?projectId=6ab7aab3500f800993579ece 200 in 64ms (next.js: 5ms, proxy.ts: 7ms, application-code: 52ms)
+ GET /api/modules/github/status 200 in 484ms (next.js: 5ms, proxy.ts: 4ms, application-code: 474ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 543ms (next.js: 95ms, proxy.ts: 12ms, application-code: 436ms)
+ GET /api/modules/file-vault/files?projectId=6ab7aab3500f800993579ece 200 in 67ms (next.js: 6ms, proxy.ts: 7ms, application-code: 54ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 194ms (next.js: 84ms, proxy.ts: 8ms, application-code: 102ms)
+ GET /api/modules/projects/6ab7aab3500f800993579ece/meetings 200 in 147ms (next.js: 75ms, proxy.ts: 5ms, application-code: 67ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=month 200 in 99ms (next.js: 7ms, proxy.ts: 6ms, application-code: 85ms)
+ GET /api/modules/projects/6ab7aab3500f800993579ece/contacts 200 in 76ms (next.js: 7ms, proxy.ts: 7ms, application-code: 63ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=all 200 in 337ms (next.js: 197ms, proxy.ts: 19ms, application-code: 121ms)
+ GET /api/modules/projects/6ab7aab3500f800993579ece/environments 200 in 73ms (next.js: 7ms, proxy.ts: 6ms, application-code: 61ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=recent 200 in 104ms (next.js: 6ms, proxy.ts: 6ms, application-code: 91ms)
+ GET /api/modules/projects/6ab7aab3500f800993579ece/activity?limit=50 200 in 139ms (next.js: 75ms, proxy.ts: 4ms, application-code: 60ms)
+✓ Compiled in 236ms
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 675ms (next.js: 126ms, proxy.ts: 18ms, application-code: 531ms)
+ GET /dashboard 200 in 838ms (next.js: 9ms, proxy.ts: 5ms, application-code: 824ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 162ms (next.js: 57ms, proxy.ts: 21ms, application-code: 84ms)
+ GET /dashboard/gmail?open=12111 200 in 247ms (next.js: 72ms, proxy.ts: 4ms, application-code: 172ms)
+[notes] enabled 
 [notes] enabled 
 [ai-assistant] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[activity] enabled 
+[projects] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 444ms (next.js: 61ms, proxy.ts: 8ms, application-code: 376ms)
+ GET /api/modules/gmail/messages/12111 200 in 261ms (next.js: 122ms, proxy.ts: 16ms, application-code: 123ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 265ms (next.js: 118ms, proxy.ts: 17ms, application-code: 130ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 137ms (next.js: 63ms, proxy.ts: 9ms, application-code: 64ms)
+ GET /api/modules/gmail/messages/12123 200 in 159ms (next.js: 76ms, proxy.ts: 5ms, application-code: 78ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 555ms (next.js: 139ms, proxy.ts: 16ms, application-code: 400ms)
+ GET /api/modules/gmail/messages/12122 200 in 108ms (next.js: 6ms, proxy.ts: 7ms, application-code: 96ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 164ms (next.js: 63ms, proxy.ts: 8ms, application-code: 93ms)
-[gmail-sync] sync tick complete { seen: 300, new: 300, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages?filter=recent 200 in 189ms (next.js: 83ms, proxy.ts: 5ms, application-code: 100ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 468ms (next.js: 140ms, proxy.ts: 16ms, application-code: 313ms)
+ GET /api/modules/gmail/messages/12123 200 in 70ms (next.js: 6ms, proxy.ts: 5ms, application-code: 60ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 190ms (next.js: 63ms, proxy.ts: 6ms, application-code: 121ms)
+ GET /api/modules/gmail/messages/12122 200 in 140ms (next.js: 74ms, proxy.ts: 3ms, application-code: 63ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12121 200 in 86ms (next.js: 8ms, proxy.ts: 8ms, application-code: 71ms)
+ GET /api/modules/gmail/messages/12121 200 in 72ms (next.js: 5ms, proxy.ts: 4ms, application-code: 63ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12120 200 in 368ms (next.js: 148ms, proxy.ts: 15ms, application-code: 205ms)
+ GET /api/modules/gmail/messages/12119 200 in 154ms (next.js: 73ms, proxy.ts: 4ms, application-code: 77ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12119 200 in 157ms (next.js: 65ms, proxy.ts: 8ms, application-code: 84ms)
+ GET /api/modules/gmail/messages/12118 200 in 137ms (next.js: 67ms, proxy.ts: 4ms, application-code: 67ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=recent 200 in 106ms (next.js: 5ms, proxy.ts: 6ms, application-code: 95ms)
+ GET /api/modules/gmail/messages/12115 200 in 161ms (next.js: 72ms, proxy.ts: 4ms, application-code: 85ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1179ms (next.js: 9ms, proxy.ts: 13ms, application-code: 1157ms)
+ GET /api/modules/gmail/messages/12114 200 in 134ms (next.js: 68ms, proxy.ts: 6ms, application-code: 60ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12118 200 in 391ms (next.js: 135ms, proxy.ts: 17ms, application-code: 240ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 140ms (next.js: 73ms, proxy.ts: 6ms, application-code: 61ms)
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=month 200 in 300ms (next.js: 6ms, proxy.ts: 6ms, application-code: 289ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12027 200 in 132ms (next.js: 67ms, proxy.ts: 4ms, application-code: 61ms)
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12026 200 in 133ms (next.js: 65ms, proxy.ts: 4ms, application-code: 64ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12025 200 in 140ms (next.js: 74ms, proxy.ts: 4ms, application-code: 63ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages/12024 200 in 182ms (next.js: 71ms, proxy.ts: 4ms, application-code: 108ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 252ms (next.js: 88ms, proxy.ts: 12ms, application-code: 151ms)
- GET /api/modules/gmail/messages/12118 200 in 269ms (next.js: 102ms, proxy.ts: 11ms, application-code: 156ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages/12025 200 in 123ms (next.js: 63ms, proxy.ts: 5ms, application-code: 55ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12119 200 in 337ms (next.js: 148ms, proxy.ts: 12ms, application-code: 177ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages/12026 200 in 64ms (next.js: 6ms, proxy.ts: 4ms, application-code: 55ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12027 200 in 137ms (next.js: 66ms, proxy.ts: 5ms, application-code: 66ms)
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12028 200 in 105ms (next.js: 6ms, proxy.ts: 8ms, application-code: 90ms)
+[notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages/12029 200 in 142ms (next.js: 70ms, proxy.ts: 4ms, application-code: 68ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
- GET /dashboard/gmail?open=12118 200 in 516ms (next.js: 65ms, proxy.ts: 8ms, application-code: 443ms)
 [projects] enabled 
- GET /dashboard/gmail?open=12118 200 in 484ms (next.js: 33ms, proxy.ts: 29ms, application-code: 423ms)
+ GET /api/modules/gmail/messages/12030 200 in 54ms (next.js: 4ms, proxy.ts: 4ms, application-code: 46ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12118 200 in 219ms (next.js: 70ms, proxy.ts: 7ms, application-code: 141ms)
+ GET /api/modules/gmail/messages/12031 200 in 140ms (next.js: 75ms, proxy.ts: 3ms, application-code: 61ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12121 200 in 246ms (next.js: 127ms, proxy.ts: 12ms, application-code: 107ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages/12032 200 in 93ms (next.js: 6ms, proxy.ts: 5ms, application-code: 81ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12118 200 in 582ms (next.js: 146ms, proxy.ts: 17ms, application-code: 418ms)
+ GET /dashboard/gmail?open=12111 200 in 414ms (next.js: 78ms, proxy.ts: 5ms, application-code: 331ms)
 [notes] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[activity] enabled 
+[projects] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12111 200 in 207ms (next.js: 85ms, proxy.ts: 9ms, application-code: 113ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 212ms (next.js: 80ms, proxy.ts: 10ms, application-code: 123ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 884ms (next.js: 4ms, proxy.ts: 7ms, application-code: 873ms)
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/activity 200 in 229ms (next.js: 63ms, proxy.ts: 5ms, application-code: 161ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/activity/events?limit=50 200 in 142ms (next.js: 83ms, proxy.ts: 5ms, application-code: 54ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /dashboard/gmail 200 in 272ms (next.js: 62ms, proxy.ts: 3ms, application-code: 207ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12118 200 in 262ms (next.js: 91ms, proxy.ts: 30ms, application-code: 141ms)
- GET /api/modules/gmail/messages?filter=today 200 in 283ms (next.js: 93ms, proxy.ts: 39ms, application-code: 151ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 127ms (next.js: 74ms, proxy.ts: 5ms, application-code: 49ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12121 200 in 209ms (next.js: 114ms, proxy.ts: 12ms, application-code: 83ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/activity/events?limit=50 200 in 151ms (next.js: 73ms, proxy.ts: 4ms, application-code: 74ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1172ms (next.js: 12ms, proxy.ts: 9ms, application-code: 1151ms)
+ GET /dashboard/ai-assistant 200 in 230ms (next.js: 65ms, proxy.ts: 5ms, application-code: 159ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 827ms (next.js: 5ms, proxy.ts: 7ms, application-code: 816ms)
+ GET /api/modules/ai-assistant/conversations 200 in 158ms (next.js: 87ms, proxy.ts: 8ms, application-code: 63ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12114 200 in 217ms (next.js: 60ms, proxy.ts: 8ms, application-code: 148ms)
+ GET /api/modules/ai-assistant/conversations 200 in 72ms (next.js: 6ms, proxy.ts: 6ms, application-code: 60ms)
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 225ms (next.js: 65ms, proxy.ts: 4ms, application-code: 156ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 150ms (next.js: 79ms, proxy.ts: 6ms, application-code: 65ms)
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/activity 200 in 251ms (next.js: 7ms, proxy.ts: 6ms, application-code: 238ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/activity/events?limit=50 200 in 60ms (next.js: 6ms, proxy.ts: 4ms, application-code: 50ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
 [activity] enabled 
+[file-vault] enabled 
 [projects] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12114 200 in 183ms (next.js: 61ms, proxy.ts: 11ms, application-code: 111ms)
- GET /api/modules/gmail/messages?filter=today 200 in 185ms (next.js: 56ms, proxy.ts: 11ms, application-code: 117ms)
+ GET /dashboard/about 200 in 1429ms (next.js: 1052ms, proxy.ts: 4ms, application-code: 373ms)
+ GET /dashboard/about 200 in 319ms (next.js: 16ms, proxy.ts: 13ms, application-code: 290ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12121 200 in 133ms (next.js: 62ms, proxy.ts: 13ms, application-code: 58ms)
+ GET /api/modules/activity/events?limit=50 200 in 144ms (next.js: 81ms, proxy.ts: 4ms, application-code: 59ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12119 200 in 132ms (next.js: 57ms, proxy.ts: 12ms, application-code: 63ms)
+ GET /api/modules/gmail/messages?filter=today 200 in 94ms (next.js: 16ms, proxy.ts: 10ms, application-code: 67ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12118 200 in 72ms (next.js: 4ms, proxy.ts: 4ms, application-code: 64ms)
+ GET /api/modules/ai-assistant/conversations 200 in 137ms (next.js: 69ms, proxy.ts: 5ms, application-code: 64ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12119 200 in 120ms (next.js: 57ms, proxy.ts: 14ms, application-code: 50ms)
+ GET /api/modules/ai-assistant/conversations 200 in 63ms (next.js: 5ms, proxy.ts: 5ms, application-code: 53ms)
+ GET /dashboard 200 in 11ms (next.js: 3ms, proxy.ts: 4ms, application-code: 5ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12113 200 in 123ms (next.js: 58ms, proxy.ts: 12ms, application-code: 53ms)
+ GET /dashboard 200 in 744ms (next.js: 6ms, proxy.ts: 4ms, application-code: 733ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12112 200 in 76ms (next.js: 6ms, proxy.ts: 4ms, application-code: 66ms)
+ GET /dashboard/ai-assistant 200 in 254ms (next.js: 79ms, proxy.ts: 5ms, application-code: 170ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12111 200 in 126ms (next.js: 58ms, proxy.ts: 15ms, application-code: 52ms)
+ GET /api/modules/ai-assistant/conversations 200 in 168ms (next.js: 88ms, proxy.ts: 9ms, application-code: 70ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=month 200 in 313ms (next.js: 50ms, proxy.ts: 4ms, application-code: 258ms)
+ GET /api/modules/ai-assistant/conversations 200 in 108ms (next.js: 12ms, proxy.ts: 9ms, application-code: 87ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12091 200 in 113ms (next.js: 51ms, proxy.ts: 7ms, application-code: 56ms)
+ GET /api/modules/ai-assistant/tool-settings 200 in 148ms (next.js: 83ms, proxy.ts: 5ms, application-code: 59ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12089 200 in 119ms (next.js: 50ms, proxy.ts: 11ms, application-code: 59ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/ai-assistant/tool-settings 200 in 60ms (next.js: 5ms, proxy.ts: 5ms, application-code: 50ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12092 200 in 121ms (next.js: 53ms, proxy.ts: 12ms, application-code: 57ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-✓ Compiled in 251ms
-✓ Compiled in 89ms
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-✓ Compiled in 225ms
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/ai-assistant/conversations 200 in 108ms (next.js: 13ms, proxy.ts: 20ms, application-code: 76ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12114 200 in 313ms (next.js: 59ms, proxy.ts: 5ms, application-code: 248ms)
+ GET /api/modules/ai-assistant/conversations 200 in 157ms (next.js: 8ms, proxy.ts: 8ms, application-code: 141ms)
+ GET /dashboard/settings 200 in 1242ms (next.js: 1177ms, proxy.ts: 6ms, application-code: 59ms)
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 739ms (next.js: 3ms, proxy.ts: 3ms, application-code: 733ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 273ms (next.js: 74ms, proxy.ts: 4ms, application-code: 195ms)
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 182ms (next.js: 88ms, proxy.ts: 7ms, application-code: 88ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 143ms (next.js: 79ms, proxy.ts: 11ms, application-code: 54ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages?filter=recent 200 in 172ms (next.js: 80ms, proxy.ts: 5ms, application-code: 87ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 177ms (next.js: 52ms, proxy.ts: 8ms, application-code: 117ms)
- GET /api/modules/gmail/messages/12114 200 in 179ms (next.js: 62ms, proxy.ts: 8ms, application-code: 109ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages?filter=today 200 in 82ms (next.js: 5ms, proxy.ts: 5ms, application-code: 72ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12114 200 in 289ms (next.js: 52ms, proxy.ts: 6ms, application-code: 231ms)
+ GET /api/modules/gmail/messages?filter=month 200 in 288ms (next.js: 6ms, proxy.ts: 5ms, application-code: 277ms)
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=all 200 in 410ms (next.js: 96ms, proxy.ts: 6ms, application-code: 308ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12024 200 in 157ms (next.js: 70ms, proxy.ts: 4ms, application-code: 84ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12025 200 in 161ms (next.js: 87ms, proxy.ts: 5ms, application-code: 69ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12026 200 in 81ms (next.js: 7ms, proxy.ts: 7ms, application-code: 67ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages/12024 200 in 133ms (next.js: 78ms, proxy.ts: 5ms, application-code: 50ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12114 200 in 188ms (next.js: 71ms, proxy.ts: 10ms, application-code: 107ms)
- GET /api/modules/gmail/messages?filter=today 200 in 191ms (next.js: 62ms, proxy.ts: 11ms, application-code: 119ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-✓ Compiled in 325ms
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-✓ Compiled in 683ms
+ GET /api/search?q= 200 in 761ms (next.js: 706ms, proxy.ts: 6ms, application-code: 49ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12025 200 in 152ms (next.js: 88ms, proxy.ts: 4ms, application-code: 59ms)
 [notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12024 200 in 137ms (next.js: 76ms, proxy.ts: 4ms, application-code: 57ms)
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
+ GET /api/search?q= 200 in 61ms (next.js: 2ms, proxy.ts: 5ms, application-code: 53ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+✓ Compiled in 141ms
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 961ms (next.js: 6ms, proxy.ts: 4ms, application-code: 951ms)
+[notes] enabled 
 [ai-assistant] enabled 
- GET /dashboard/gmail?open=12114 200 in 933ms (next.js: 213ms, proxy.ts: 80ms, application-code: 640ms)
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
+ GET /dashboard/notes?new=1 200 in 247ms (next.js: 71ms, proxy.ts: 3ms, application-code: 173ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/projects 200 in 157ms (next.js: 91ms, proxy.ts: 6ms, application-code: 61ms)
+✓ Compiled in 197ms
+✓ Compiled in 383ms
+[notes] enabled 
+[ai-assistant] enabled 
+[notes] enabled 
 [notes] enabled 
- GET /dashboard/gmail?open=12114 200 in 647ms (next.js: 36ms, proxy.ts: 36ms, application-code: 575ms)
+[file-vault] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[notes] enabled 
 [projects] enabled 
+[activity] enabled 
 [file-vault] enabled 
- GET /dashboard/gmail?open=12114 200 in 530ms (next.js: 34ms, proxy.ts: 44ms, application-code: 452ms)
+[ai-assistant] enabled 
 [activity] enabled 
+[notes] enabled 
+[projects] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12114 200 in 446ms (next.js: 77ms, proxy.ts: 88ms, application-code: 280ms)
+[activity] enabled 
 [notes] enabled 
+[file-vault] enabled 
+ GET /dashboard 200 in 998ms (next.js: 299ms, proxy.ts: 358ms, application-code: 341ms)
+ GET /dashboard 200 in 1457ms (next.js: 88ms, proxy.ts: 233ms, application-code: 1135ms)
+ GET /dashboard 200 in 2.2s (next.js: 77ms, proxy.ts: 357ms, application-code: 1793ms)
+ GET /dashboard 200 in 1649ms (next.js: 37ms, proxy.ts: 48ms, application-code: 1565ms)
+ GET /dashboard 200 in 2.7s (next.js: 144ms, proxy.ts: 114ms, application-code: 2.4s)
+[projects] enabled 
+[activity] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[projects] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12114 200 in 215ms (next.js: 122ms, proxy.ts: 17ms, application-code: 76ms)
-✓ Compiled in 98ms
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /dashboard 200 in 3.2s (next.js: 62ms, proxy.ts: 349ms, application-code: 2.8s)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail?open=12114 200 in 1185ms (next.js: 61ms, proxy.ts: 7ms, application-code: 1117ms)
+ GET /dashboard/gmail?open=12114 200 in 283ms (next.js: 92ms, proxy.ts: 4ms, application-code: 187ms)
 [notes] enabled 
 [notes] enabled 
 [ai-assistant] enabled 
@@ -489,73 +706,107 @@
 [file-vault] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[activity] enabled 
+[projects] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 365ms (next.js: 175ms, proxy.ts: 18ms, application-code: 172ms)
+ GET /api/modules/gmail/messages/12114 200 in 364ms (next.js: 197ms, proxy.ts: 19ms, application-code: 149ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages?filter=all 200 in 372ms (next.js: 91ms, proxy.ts: 5ms, application-code: 276ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12114 200 in 269ms (next.js: 95ms, proxy.ts: 18ms, application-code: 156ms)
- GET /api/modules/gmail/messages?filter=today 200 in 277ms (next.js: 85ms, proxy.ts: 19ms, application-code: 173ms)
+ GET /api/modules/gmail/messages/12094 200 in 208ms (next.js: 90ms, proxy.ts: 5ms, application-code: 112ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12121 200 in 187ms (next.js: 104ms, proxy.ts: 16ms, application-code: 68ms)
+ GET /api/modules/gmail/messages/12054 200 in 158ms (next.js: 77ms, proxy.ts: 5ms, application-code: 76ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12120 200 in 66ms (next.js: 4ms, proxy.ts: 5ms, application-code: 57ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages?filter=all&q=dt 200 in 521ms (next.js: 71ms, proxy.ts: 4ms, application-code: 447ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/search?q= 200 in 1025ms (next.js: 975ms, proxy.ts: 6ms, application-code: 44ms)
+ GET /api/modules/gmail/messages?filter=all&q=dtlp 200 in 119ms (next.js: 6ms, proxy.ts: 7ms, application-code: 106ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/search?q=sw 200 in 840ms (next.js: 3ms, proxy.ts: 6ms, application-code: 831ms)
+ GET /api/modules/gmail/messages?filter=all 200 in 330ms (next.js: 79ms, proxy.ts: 5ms, application-code: 246ms)
+✓ Compiled in 157ms
+✓ Compiled in 154ms
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+✓ Compiled in 90ms
+✓ Compiled in 363ms
 [notes] enabled 
 [ai-assistant] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[notes] enabled 
+[activity] enabled 
 [file-vault] enabled 
+[ai-assistant] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12119 200 in 174ms (next.js: 71ms, proxy.ts: 22ms, application-code: 81ms)
+[file-vault] enabled 
 [notes] enabled 
+[projects] enabled 
+[activity] enabled 
+ GET /dashboard/gmail?open=12114 200 in 1442ms (next.js: 262ms, proxy.ts: 102ms, application-code: 1077ms)
 [ai-assistant] enabled 
+ GET /dashboard/gmail?open=12114 200 in 662ms (next.js: 131ms, proxy.ts: 52ms, application-code: 478ms)
+ GET /dashboard/gmail?open=12114 200 in 1041ms (next.js: 42ms, proxy.ts: 270ms, application-code: 729ms)
+[projects] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12118 200 in 163ms (next.js: 70ms, proxy.ts: 16ms, application-code: 77ms)
+ GET /dashboard/gmail?open=12114 200 in 1619ms (next.js: 452ms, proxy.ts: 7ms, application-code: 1159ms)
 [notes] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12117 200 in 165ms (next.js: 70ms, proxy.ts: 13ms, application-code: 82ms)
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 251ms (next.js: 136ms, proxy.ts: 8ms, application-code: 107ms)
+ GET /api/modules/gmail/messages/12114 200 in 252ms (next.js: 148ms, proxy.ts: 7ms, application-code: 97ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12112 200 in 157ms (next.js: 70ms, proxy.ts: 14ms, application-code: 72ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages?filter=recent 200 in 168ms (next.js: 79ms, proxy.ts: 7ms, application-code: 82ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=recent 200 in 234ms (next.js: 80ms, proxy.ts: 5ms, application-code: 149ms)
+ GET /api/modules/gmail/messages/12123 200 in 69ms (next.js: 5ms, proxy.ts: 6ms, application-code: 58ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12116 200 in 70ms (next.js: 4ms, proxy.ts: 5ms, application-code: 61ms)
+ GET /dashboard/gmail?open=12114 200 in 552ms (next.js: 73ms, proxy.ts: 5ms, application-code: 473ms)
 [notes] enabled 
 [notes] enabled 
 [ai-assistant] enabled 
@@ -565,122 +816,845 @@
 [activity] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 207ms (next.js: 105ms, proxy.ts: 10ms, application-code: 92ms)
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 206ms (next.js: 74ms, proxy.ts: 12ms, application-code: 120ms)
- GET /api/modules/gmail/messages/12114 200 in 210ms (next.js: 86ms, proxy.ts: 12ms, application-code: 112ms)
+ GET /api/modules/gmail/messages/12114 200 in 213ms (next.js: 112ms, proxy.ts: 10ms, application-code: 91ms)
 [notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 140ms (next.js: 83ms, proxy.ts: 5ms, application-code: 52ms)
 [notes] enabled 
 [ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12122 200 in 88ms (next.js: 6ms, proxy.ts: 5ms, application-code: 77ms)
+[notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 150ms (next.js: 84ms, proxy.ts: 5ms, application-code: 60ms)
+[notes] enabled 
+[ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=month 200 in 261ms (next.js: 7ms, proxy.ts: 6ms, application-code: 247ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 132ms (next.js: 72ms, proxy.ts: 3ms, application-code: 57ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 166ms (next.js: 68ms, proxy.ts: 15ms, application-code: 83ms)
- GET /api/modules/gmail/messages/12114 200 in 167ms (next.js: 72ms, proxy.ts: 15ms, application-code: 80ms)
+ GET /api/modules/gmail/messages/12122 200 in 147ms (next.js: 83ms, proxy.ts: 5ms, application-code: 60ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1059ms (next.js: 41ms, proxy.ts: 9ms, application-code: 1009ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /api/modules/gmail/messages/12121 200 in 72ms (next.js: 6ms, proxy.ts: 6ms, application-code: 60ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/gmail 200 in 270ms (next.js: 65ms, proxy.ts: 14ms, application-code: 192ms)
+ GET /api/modules/gmail/messages/12120 200 in 144ms (next.js: 79ms, proxy.ts: 4ms, application-code: 62ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=today 200 in 170ms (next.js: 65ms, proxy.ts: 6ms, application-code: 99ms)
+ GET /api/modules/gmail/messages/12119 200 in 73ms (next.js: 5ms, proxy.ts: 7ms, application-code: 61ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12121 200 in 122ms (next.js: 61ms, proxy.ts: 6ms, application-code: 54ms)
+ GET /api/modules/gmail/messages/12118 200 in 154ms (next.js: 84ms, proxy.ts: 5ms, application-code: 66ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages/12120 200 in 151ms (next.js: 71ms, proxy.ts: 13ms, application-code: 66ms)
+ GET /api/modules/gmail/messages/12117 200 in 108ms (next.js: 4ms, proxy.ts: 5ms, application-code: 99ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/gmail/messages?filter=recent 200 in 144ms (next.js: 58ms, proxy.ts: 6ms, application-code: 80ms)
+ GET /api/modules/gmail/messages/12116 200 in 138ms (next.js: 75ms, proxy.ts: 9ms, application-code: 55ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 979ms (next.js: 3ms, proxy.ts: 22ms, application-code: 954ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
- GET /dashboard/secrets 200 in 1420ms (next.js: 1366ms, proxy.ts: 12ms, application-code: 41ms)
+ GET /dashboard 200 in 905ms (next.js: 33ms, proxy.ts: 4ms, application-code: 869ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/projects 200 in 133ms (next.js: 71ms, proxy.ts: 6ms, application-code: 55ms)
- GET /dashboard/secrets 200 in 43ms (next.js: 4ms, proxy.ts: 4ms, application-code: 35ms)
- GET /api/secrets/AI_PROVIDER_GROQ 200 in 923ms (next.js: 909ms, proxy.ts: 4ms, application-code: 10ms)
- GET /api/secrets/GITHUB_TOKEN 200 in 97ms (next.js: 76ms, proxy.ts: 13ms, application-code: 8ms)
+ GET /dashboard 200 in 680ms (next.js: 5ms, proxy.ts: 5ms, application-code: 670ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 597ms (next.js: 2ms, proxy.ts: 4ms, application-code: 591ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 235ms (next.js: 80ms, proxy.ts: 5ms, application-code: 150ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 192ms (next.js: 100ms, proxy.ts: 6ms, application-code: 85ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=month 200 in 350ms (next.js: 91ms, proxy.ts: 4ms, application-code: 255ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12052 200 in 152ms (next.js: 76ms, proxy.ts: 4ms, application-code: 72ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12051 200 in 156ms (next.js: 76ms, proxy.ts: 6ms, application-code: 74ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12053 200 in 60ms (next.js: 4ms, proxy.ts: 6ms, application-code: 50ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12054 200 in 165ms (next.js: 75ms, proxy.ts: 5ms, application-code: 84ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12052 200 in 142ms (next.js: 74ms, proxy.ts: 3ms, application-code: 64ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12053 200 in 132ms (next.js: 74ms, proxy.ts: 4ms, application-code: 54ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12054 200 in 172ms (next.js: 92ms, proxy.ts: 5ms, application-code: 75ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12053 200 in 71ms (next.js: 6ms, proxy.ts: 6ms, application-code: 59ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+[browser] Uncaught Error: Module [project]/node_modules/lucide-react/dist/esm/icons/chevron-left.mjs [app-client] (ecmascript) <export default as ChevronLeft> was instantiated because it was required from module [project]/src/modules/gmail/client/MessageDetail.tsx [app-client] (ecmascript), but the module factory is not available.
+This is often caused by a stale browser cache, misconfigured Cache-Control headers, or a service worker serving outdated responses.
+To fix this, make sure your Cache-Control headers allow revalidation of chunks and review your service worker configuration. As an immediate workaround, try hard-reloading the page, clearing the browser cache, or unregistering any service workers.
+    at module evaluation (src/modules/gmail/client/MessageDetail.tsx:4:1)
+    at module evaluation (src/modules/gmail/client/InboxView.tsx:11:1)
+    at module evaluation (src/modules/gmail/client/GmailView.tsx:7:1)
+    at GmailPage (src/modules/gmail/client/GmailPage.tsx:20:7)
+    at component (src/modules/gmail/index.tsx:14:45)
+    at ModulePage (src/app/dashboard/[moduleId]/page.tsx:18:10)
+  2 |
+  3 | import { useState, type FormEvent } from "react";
+> 4 | import { CheckCheck, ChevronDown, ChevronLeft, ChevronRight, Mail, Tag, X } from "lucide-re...
+    | ^
+  5 | import { toast } from "sonner";
+  6 | import { Button } from "@/components/ui/button";
+  7 | import { Input } from "@/components/ui/input";
+✓ Compiled in 558ms
+[notes] enabled 
+[ai-assistant] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
+[projects] enabled 
+[activity] enabled 
+[notes] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[projects] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+[ai-assistant] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[file-vault] enabled 
+[projects] enabled 
+[activity] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+[projects] enabled 
+[file-vault] enabled 
+[projects] enabled 
+[activity] enabled 
+ GET /dashboard 200 in 3.0s (next.js: 148ms, proxy.ts: 121ms, application-code: 2.7s)
+ GET /dashboard 200 in 1468ms (next.js: 215ms, proxy.ts: 84ms, application-code: 1169ms)
+ GET /dashboard 200 in 2.3s (next.js: 22ms, proxy.ts: 40ms, application-code: 2.2s)
+ GET /dashboard 200 in 2.1s (next.js: 201ms, proxy.ts: 67ms, application-code: 1851ms)
+ GET /dashboard 200 in 2.5s (next.js: 11ms, proxy.ts: 38ms, application-code: 2.4s)
+[projects] enabled 
+ GET /dashboard 200 in 2.5s (next.js: 257ms, proxy.ts: 54ms, application-code: 2.2s)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail? 200 in 372ms (next.js: 104ms, proxy.ts: 4ms, application-code: 264ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 431ms (next.js: 198ms, proxy.ts: 6ms, application-code: 226ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=recent 200 in 206ms (next.js: 91ms, proxy.ts: 6ms, application-code: 109ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12121 200 in 144ms (next.js: 35ms, proxy.ts: 16ms, application-code: 93ms)
+✓ Compiled in 648ms
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[notes] enabled 
+[activity] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[projects] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[notes] enabled 
+[activity] enabled 
+[file-vault] enabled 
+ GET /dashboard/gmail 200 in 1428ms (next.js: 243ms, proxy.ts: 134ms, application-code: 1051ms)
+[activity] enabled 
+[ai-assistant] enabled 
+[projects] enabled 
+[notes] enabled 
+[projects] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+ GET /api/modules/gmail/messages/12122 200 in 1105ms (next.js: 213ms, proxy.ts: 167ms, application-code: 725ms)
+ GET /dashboard/gmail 200 in 1106ms (next.js: 220ms, proxy.ts: 167ms, application-code: 719ms)
+[file-vault] enabled 
+[notes] enabled 
+[projects] enabled 
+[activity] enabled 
+[ai-assistant] enabled 
+ GET /dashboard/gmail 200 in 1018ms (next.js: 114ms, proxy.ts: 40ms, application-code: 864ms)
+[projects] enabled 
+[file-vault] enabled 
+[notes] enabled 
+[activity] enabled 
+[ai-assistant] enabled 
+ GET /dashboard/gmail 200 in 934ms (next.js: 55ms, proxy.ts: 57ms, application-code: 822ms)
+[projects] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+ GET /dashboard/gmail 200 in 1114ms (next.js: 85ms, proxy.ts: 90ms, application-code: 939ms)
+[projects] enabled 
+[notes] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[ai-assistant] enabled 
+ GET /dashboard/gmail 200 in 1057ms (next.js: 127ms, proxy.ts: 143ms, application-code: 788ms)
+[projects] enabled 
+[file-vault] enabled 
+ GET /dashboard/gmail 200 in 746ms (next.js: 143ms, proxy.ts: 78ms, application-code: 525ms)
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 551ms (next.js: 78ms, proxy.ts: 94ms, application-code: 379ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12121 200 in 170ms (next.js: 98ms, proxy.ts: 5ms, application-code: 68ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12120 200 in 206ms (next.js: 108ms, proxy.ts: 4ms, application-code: 94ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12119 200 in 182ms (next.js: 86ms, proxy.ts: 5ms, application-code: 91ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12118 200 in 155ms (next.js: 77ms, proxy.ts: 6ms, application-code: 72ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 697ms (next.js: 100ms, proxy.ts: 5ms, application-code: 592ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 169ms (next.js: 95ms, proxy.ts: 7ms, application-code: 67ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 72ms (next.js: 6ms, proxy.ts: 6ms, application-code: 60ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12122 200 in 144ms (next.js: 81ms, proxy.ts: 4ms, application-code: 58ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=all 200 in 430ms (next.js: 110ms, proxy.ts: 6ms, application-code: 314ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12115 200 in 149ms (next.js: 76ms, proxy.ts: 4ms, application-code: 69ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12114 200 in 204ms (next.js: 106ms, proxy.ts: 5ms, application-code: 94ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12105 200 in 132ms (next.js: 76ms, proxy.ts: 4ms, application-code: 52ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12105 200 in 104ms (next.js: 5ms, proxy.ts: 5ms, application-code: 94ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12106 200 in 169ms (next.js: 77ms, proxy.ts: 5ms, application-code: 88ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12103 200 in 142ms (next.js: 78ms, proxy.ts: 5ms, application-code: 60ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12097 200 in 146ms (next.js: 76ms, proxy.ts: 6ms, application-code: 63ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12091 200 in 130ms (next.js: 76ms, proxy.ts: 5ms, application-code: 49ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12090 200 in 159ms (next.js: 84ms, proxy.ts: 3ms, application-code: 72ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12089 200 in 60ms (next.js: 6ms, proxy.ts: 4ms, application-code: 50ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12088 200 in 152ms (next.js: 86ms, proxy.ts: 5ms, application-code: 60ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12087 200 in 74ms (next.js: 6ms, proxy.ts: 5ms, application-code: 63ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12086 200 in 151ms (next.js: 76ms, proxy.ts: 5ms, application-code: 70ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12085 200 in 62ms (next.js: 4ms, proxy.ts: 4ms, application-code: 54ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 339ms (next.js: 79ms, proxy.ts: 4ms, application-code: 256ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 171ms (next.js: 94ms, proxy.ts: 6ms, application-code: 72ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=recent 200 in 190ms (next.js: 97ms, proxy.ts: 6ms, application-code: 88ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 140ms (next.js: 80ms, proxy.ts: 5ms, application-code: 55ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12122 200 in 152ms (next.js: 87ms, proxy.ts: 4ms, application-code: 61ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12121 200 in 66ms (next.js: 5ms, proxy.ts: 4ms, application-code: 57ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12120 200 in 141ms (next.js: 81ms, proxy.ts: 4ms, application-code: 56ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12119 200 in 86ms (next.js: 5ms, proxy.ts: 5ms, application-code: 76ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12118 200 in 172ms (next.js: 87ms, proxy.ts: 5ms, application-code: 80ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12116 200 in 153ms (next.js: 84ms, proxy.ts: 4ms, application-code: 66ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12115 200 in 72ms (next.js: 6ms, proxy.ts: 4ms, application-code: 62ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12114 200 in 158ms (next.js: 86ms, proxy.ts: 3ms, application-code: 69ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 158ms (next.js: 89ms, proxy.ts: 4ms, application-code: 65ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 1092ms (next.js: 25ms, proxy.ts: 4ms, application-code: 1063ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/search?q= 200 in 111ms (next.js: 63ms, proxy.ts: 6ms, application-code: 42ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/ai-assistant 200 in 297ms (next.js: 87ms, proxy.ts: 6ms, application-code: 203ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/ai-assistant/conversations 200 in 210ms (next.js: 121ms, proxy.ts: 26ms, application-code: 63ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/ai-assistant/conversations 200 in 74ms (next.js: 6ms, proxy.ts: 7ms, application-code: 61ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/ai-assistant/conversations/6ab9f823f4b16a05073311ca 200 in 146ms (next.js: 81ms, proxy.ts: 3ms, application-code: 61ms)
+[browser] Encountered two children with the same key, `kmjenz751`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `3ne33gqra`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[browser] Encountered two children with the same key, `kmjenz751`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `3ne33gqra`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/ai-assistant 200 in 585ms (next.js: 85ms, proxy.ts: 7ms, application-code: 493ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/ai-assistant/conversations 200 in 174ms (next.js: 101ms, proxy.ts: 6ms, application-code: 67ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/ai-assistant/tool-settings 200 in 143ms (next.js: 91ms, proxy.ts: 5ms, application-code: 48ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/ai-assistant/tool-settings 200 in 61ms (next.js: 6ms, proxy.ts: 6ms, application-code: 49ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 12ms (next.js: 3ms, proxy.ts: 4ms, application-code: 5ms)
+[notes] enabled 
+[ai-assistant] enabled 
+ GET /dashboard 200 in 955ms (next.js: 5ms, proxy.ts: 6ms, application-code: 944ms)
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 717ms (next.js: 3ms, proxy.ts: 4ms, application-code: 711ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/github 200 in 244ms (next.js: 76ms, proxy.ts: 4ms, application-code: 164ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/github/repos?filter=all 200 in 548ms (next.js: 89ms, proxy.ts: 22ms, application-code: 438ms)
+[notes] enabled 
+[notes] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[ai-assistant] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[file-vault] enabled 
+[ai-assistant] enabled 
+[activity] enabled 
+[activity] enabled 
+[projects] enabled 
+[projects] enabled 
+[file-vault] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[activity] enabled 
+[projects] enabled 
+[projects] enabled 
+ GET /api/modules/github/repos/Prasanth-bca/prasanth-portfolio/issues 200 in 601ms (next.js: 33ms, proxy.ts: 14ms, application-code: 553ms)
+ GET /api/modules/github/repos/Prasanth-bca/prasanth-portfolio/branches 200 in 612ms (next.js: 16ms, proxy.ts: 18ms, application-code: 578ms)
+ GET /api/modules/github/repos/Prasanth-bca/prasanth-portfolio/pulls 200 in 612ms (next.js: 29ms, proxy.ts: 17ms, application-code: 566ms)
+ GET /api/modules/github/repos/Prasanth-bca/prasanth-portfolio/commits 200 in 622ms (next.js: 20ms, proxy.ts: 17ms, application-code: 584ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/github/status 200 in 684ms (next.js: 80ms, proxy.ts: 4ms, application-code: 600ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/github/status 200 in 505ms (next.js: 4ms, proxy.ts: 4ms, application-code: 497ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/gmail 200 in 264ms (next.js: 79ms, proxy.ts: 4ms, application-code: 182ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=today 200 in 161ms (next.js: 94ms, proxy.ts: 6ms, application-code: 60ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 79ms (next.js: 7ms, proxy.ts: 6ms, application-code: 67ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12122 200 in 174ms (next.js: 95ms, proxy.ts: 5ms, application-code: 74ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages?filter=month 200 in 384ms (next.js: 96ms, proxy.ts: 5ms, application-code: 284ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12123 200 in 63ms (next.js: 4ms, proxy.ts: 4ms, application-code: 55ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12122 200 in 169ms (next.js: 94ms, proxy.ts: 4ms, application-code: 71ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12121 200 in 139ms (next.js: 75ms, proxy.ts: 5ms, application-code: 59ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12120 200 in 140ms (next.js: 88ms, proxy.ts: 4ms, application-code: 47ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12120 200 in 68ms (next.js: 6ms, proxy.ts: 8ms, application-code: 54ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12119 200 in 164ms (next.js: 80ms, proxy.ts: 6ms, application-code: 78ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12118 200 in 163ms (next.js: 75ms, proxy.ts: 6ms, application-code: 82ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/gmail/messages/12119 200 in 72ms (next.js: 7ms, proxy.ts: 6ms, application-code: 60ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/activity 200 in 246ms (next.js: 75ms, proxy.ts: 3ms, application-code: 168ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/activity/events?limit=50 200 in 197ms (next.js: 120ms, proxy.ts: 11ms, application-code: 66ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 866ms (next.js: 4ms, proxy.ts: 6ms, application-code: 856ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/activity 200 in 259ms (next.js: 75ms, proxy.ts: 4ms, application-code: 180ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/activity/events?limit=50 200 in 156ms (next.js: 91ms, proxy.ts: 8ms, application-code: 57ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+ GET /dashboard 200 in 890ms (next.js: 4ms, proxy.ts: 6ms, application-code: 879ms)
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard 200 in 726ms (next.js: 4ms, proxy.ts: 5ms, application-code: 717ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/activity 200 in 249ms (next.js: 86ms, proxy.ts: 4ms, application-code: 159ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/activity/events?limit=50 200 in 163ms (next.js: 89ms, proxy.ts: 5ms, application-code: 69ms)
+[notes] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /dashboard/notes?open=6ab7af62b620203cccfd3382 200 in 262ms (next.js: 82ms, proxy.ts: 4ms, application-code: 176ms)
+[notes] enabled 
+[notes] enabled 
+[ai-assistant] enabled 
+[ai-assistant] enabled 
+[file-vault] enabled 
+[file-vault] enabled 
+[activity] enabled 
+[activity] enabled 
+[projects] enabled 
+ GET /api/modules/projects 200 in 284ms (next.js: 137ms, proxy.ts: 18ms, application-code: 130ms)
 [projects] enabled 
- GET /dashboard 200 in 1056ms (next.js: 3ms, proxy.ts: 5ms, application-code: 1048ms)
+ GET /api/modules/notes/6ab7af62b620203cccfd3382/related 200 in 308ms (next.js: 127ms, proxy.ts: 19ms, application-code: 162ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard/notes 200 in 265ms (next.js: 77ms, proxy.ts: 15ms, application-code: 173ms)
+ GET /api/modules/notes/6ab7af62b620203cccfd3382/related 200 in 125ms (next.js: 11ms, proxy.ts: 7ms, application-code: 106ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/notes/6ab7af62b620203cccfd3382/related 200 in 187ms (next.js: 88ms, proxy.ts: 12ms, application-code: 87ms)
+ POST /api/modules/notes/6ab7af62b620203cccfd3382/summarize 200 in 540ms (next.js: 100ms, proxy.ts: 6ms, application-code: 434ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/notes/6ab7af62b620203cccfd3382/related 200 in 76ms (next.js: 7ms, proxy.ts: 7ms, application-code: 63ms)
+ POST /api/modules/notes/6ab7af62b620203cccfd3382/summarize 200 in 391ms (next.js: 93ms, proxy.ts: 5ms, application-code: 292ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/notes/6ab7af62b620203cccfd3382/related 200 in 136ms (next.js: 69ms, proxy.ts: 4ms, application-code: 64ms)
+ GET /api/modules/activity/events?limit=50 200 in 156ms (next.js: 95ms, proxy.ts: 7ms, application-code: 54ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /api/modules/notes/6ab7af62b620203cccfd3382/related 200 in 69ms (next.js: 5ms, proxy.ts: 5ms, application-code: 59ms)
+ GET /dashboard 200 in 865ms (next.js: 3ms, proxy.ts: 4ms, application-code: 858ms)
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
+[gmail-sync] sync tick complete { seen: 293, new: 0, staleRemoved: 0 }
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 856ms (next.js: 5ms, proxy.ts: 13ms, application-code: 839ms)
+ GET /api/search?q= 200 in 51ms (next.js: 4ms, proxy.ts: 4ms, application-code: 43ms)
 [notes] enabled 
 [ai-assistant] enabled 
 [file-vault] enabled 
 [activity] enabled 
 [projects] enabled 
- GET /dashboard 200 in 1227ms (next.js: 5ms, proxy.ts: 7ms, application-code: 1216ms)
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
-[gmail-sync] sync tick complete { seen: 300, new: 0, staleRemoved: 0 }
+ GET /dashboard 200 in 1073ms (next.js: 3ms, proxy.ts: 3ms, application-code: 1067ms)

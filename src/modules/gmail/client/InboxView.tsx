@@ -122,6 +122,26 @@ export function InboxView() {
   const active = FILTERS.find((f) => f.value === filter) ?? FILTERS[0];
   const unreadCount = messages?.filter((m) => m.unread).length ?? 0;
 
+  function handleNext() {
+    if (!messages || !selectedId) return;
+    const currentIndex = messages.findIndex((m) => m.id === selectedId);
+    if (currentIndex < messages.length - 1) {
+      openMessage(messages[currentIndex + 1].id);
+    }
+  }
+
+  function handlePrevious() {
+    if (!messages || !selectedId) return;
+    const currentIndex = messages.findIndex((m) => m.id === selectedId);
+    if (currentIndex > 0) {
+      openMessage(messages[currentIndex - 1].id);
+    }
+  }
+
+  const currentIndex = messages && selectedId ? messages.findIndex((m) => m.id === selectedId) : -1;
+  const hasPrevious = currentIndex > 0;
+  const hasNext = messages && currentIndex >= 0 && currentIndex < messages.length - 1;
+
   return (
     <div className="animate-fade-in flex flex-1 min-h-0 gap-3 overflow-hidden">
       {/* Conversation list — a floating glass panel, the one blurred surface here. */}
@@ -196,6 +216,8 @@ export function InboxView() {
             setSelectedEmail(null);
           }}
           onMarkedRead={handleMarkedRead}
+          onNext={hasNext ? handleNext : undefined}
+          onPrevious={hasPrevious ? handlePrevious : undefined}
         />
       </div>
     </div>

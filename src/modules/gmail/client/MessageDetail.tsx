@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { CheckCheck, ChevronDown, Mail, Tag, X } from "lucide-react";
+import { CheckCheck, ChevronDown, ChevronLeft, ChevronRight, Mail, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,15 @@ export function MessageDetail({
   loading,
   onClose,
   onMarkedRead,
+  onNext,
+  onPrevious,
 }: {
   email: EmailDetailType | null;
   loading: boolean;
   onClose?: () => void;
   onMarkedRead: (id: string) => void;
+  onNext?: () => void;
+  onPrevious?: () => void;
 }) {
   const [labeling, setLabeling] = useState(false);
   const [labelInput, setLabelInput] = useState("");
@@ -110,18 +114,44 @@ export function MessageDetail({
               {detailsOpen ? "Hide details" : "Show details"}
             </button>
           </div>
-          {onClose && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Close message"
-              className="h-8 w-8 shrink-0"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            {onPrevious && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Previous message"
+                className="h-8 w-8"
+                onClick={onPrevious}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            {onNext && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Next message"
+                className="h-8 w-8"
+                onClick={onNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+            {onClose && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Close message"
+                className="h-8 w-8"
+                onClick={onClose}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
         {detailsOpen && (
           <div className="px-5 pb-3 space-y-1 text-sm border-t border-border/50 pt-2 bg-foreground/[0.02] dark:bg-white/[0.02]">
@@ -167,10 +197,35 @@ export function MessageDetail({
       {/* Reading surface — centered, measure-capped for legibility. */}
       <div className="flex-1 min-h-0 overflow-y-auto p-5 flex justify-center">
         {email.bodyHtml ? (
-          <div
-            className="w-full max-w-3xl text-sm leading-relaxed prose prose-sm dark:prose-invert prose-a:text-[var(--accent)]"
-            dangerouslySetInnerHTML={{ __html: email.bodyHtml }}
-          />
+          <>
+            <style dangerouslySetInnerHTML={{ __html: `
+              .email-content * {
+                background-color: transparent !important;
+                background-image: none !important;
+              }
+              .email-content table {
+                background-color: transparent !important;
+              }
+              .email-content td,
+              .email-content th {
+                background-color: transparent !important;
+              }
+              .email-content a {
+                color: var(--accent) !important;
+              }
+              .email-content img {
+                max-width: 100%;
+                height: auto;
+              }
+              .email-content * {
+                color: inherit;
+              }
+            `}} />
+            <div
+              className="email-content w-full max-w-3xl text-sm leading-relaxed prose prose-sm dark:prose-invert prose-a:text-[var(--accent)]"
+              dangerouslySetInnerHTML={{ __html: email.bodyHtml }}
+            />
+          </>
         ) : (
           <p className="w-full max-w-3xl text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">{email.body}</p>
         )}

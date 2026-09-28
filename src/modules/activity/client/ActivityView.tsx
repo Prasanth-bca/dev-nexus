@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
 import { getModuleAccent } from "@/lib/icon-map";
 import type { ActivityEvent } from "./types";
 
@@ -116,13 +115,6 @@ export function ActivityView() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        title="Activity"
-        description="A running history of what's happened across Dev Nexus."
-        icon={History}
-        accent={OWN_ACCENT}
-      />
-
       {loading ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 6 }).map((_, i) => (

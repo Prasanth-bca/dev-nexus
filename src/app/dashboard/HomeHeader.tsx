@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { History, Info, KeyRound, LogOut, Settings } from "lucide-react";
+import { useTheme } from "next-themes";
+import { ArrowLeft, History, Info, KeyRound, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { AppsLauncher } from "./AppsLauncher";
 import type { NavLink } from "./dashboard-data";
 import { CommandPalette } from "@/components/command-palette";
@@ -22,6 +23,7 @@ interface HomeHeaderProps {
 export function HomeHeader({ moduleLinks, profile }: HomeHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const initial = (profile.displayName || "A").charAt(0).toUpperCase();
 
   async function handleLogout() {
@@ -30,14 +32,36 @@ export function HomeHeader({ moduleLinks, profile }: HomeHeaderProps) {
     router.refresh();
   }
 
+  function toggleTheme() {
+    setTheme(theme === "dark" ? "light" : "dark");
+  }
+
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 px-6">
-      <Link href="/dashboard" className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-sm font-bold text-white">
-          N
-        </span>
-        <span className="text-[15px] font-semibold tracking-tight">Dev Nexus</span>
-      </Link>
+      <div className="flex items-center gap-3">
+        {pathname !== "/dashboard" && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  onClick={() => router.back()}
+                  aria-label="Go back"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground dark:hover:bg-white/[0.06]"
+                >
+                  <ArrowLeft className="h-[18px] w-[18px]" />
+                </button>
+              }
+            />
+            <TooltipContent side="bottom">Back</TooltipContent>
+          </Tooltip>
+        )}
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-sm font-bold text-white">
+            N
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight">Dev Nexus</span>
+        </Link>
+      </div>
 
       <div className="flex items-center gap-1">
         {/* HeroSection already renders the big hero search on the homepage — mounting a
@@ -45,6 +69,21 @@ export function HomeHeader({ moduleLinks, profile }: HomeHeaderProps) {
             and fight over which dialog opens. Every other route has no hero, so it needs
             this compact trigger to keep search (and Ctrl+K) reachable at all. */}
         {pathname !== "/dashboard" && <CommandPalette variant="icon" />}
+
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground dark:hover:bg-white/[0.06]"
+              >
+                {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+              </button>
+            }
+          />
+          <TooltipContent side="bottom">{theme === "dark" ? "Light mode" : "Dark mode"}</TooltipContent>
+        </Tooltip>
 
         <AppsLauncher apps={moduleLinks} />
 

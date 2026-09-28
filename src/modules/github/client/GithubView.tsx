@@ -1,8 +1,7 @@
 "use client";
 
-import { FolderGit2, PlugZap } from "lucide-react";
+import { PlugZap } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { getModuleAccent } from "@/lib/icon-map";
 import { RepoExplorer } from "./RepoExplorer";
@@ -13,15 +12,8 @@ const ACCENT = getModuleAccent("github");
 export function GithubView({ initialConnected }: { initialConnected: boolean }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <PageHeader
-        title="GitHub"
-        description="Browse repositories, branches, commits, pull requests, and issues."
-        icon={FolderGit2}
-        accent={ACCENT}
-      />
-
       <Tabs defaultValue={initialConnected ? "repos" : "settings"} className="flex flex-1 min-h-0 flex-col">
-        <TabsList className="mb-4 self-start">
+        <TabsList className="mb-2 self-start">
           <TabsTrigger value="repos">Repositories</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>

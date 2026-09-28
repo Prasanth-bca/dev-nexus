@@ -20,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { getModuleAccent } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
@@ -237,30 +236,6 @@ export function FileVaultView() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        title="File Vault"
-        description="Store and browse images, PDFs, and documents."
-        icon={Vault}
-        accent={accent}
-        actions={
-          // A <label> wrapping a visually-hidden input — an <input> can't legally nest
-          // inside a <button>, so the label carries the button styling instead.
-          <label
-            style={{ "--accent": accent } as React.CSSProperties}
-            className={cn(
-              buttonVariants({ variant: "default", size: "lg" }),
-              CONTROL_HEIGHT,
-              "cursor-pointer px-4",
-              uploading && "pointer-events-none opacity-60"
-            )}
-          >
-            <Upload className={cn("h-4 w-4", uploading && "animate-pulse")} />
-            {uploading ? "Uploading…" : "Upload"}
-            <input type="file" onChange={handleUpload} disabled={uploading} className="sr-only" />
-          </label>
-        }
-      />
-
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by category">
           {CATEGORIES.map((c) => {
