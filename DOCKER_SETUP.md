@@ -32,6 +32,8 @@ docker compose logs -f
 # Open http://localhost:3000 in your browser
 ```
 
+**Note:** You **don't need a `.env.local` file** for Docker setup. All environment variables are configured in `docker-compose.yml`. If you see an error about `.env.local` not found, you can safely ignore it or the issue will be fixed in the latest version.
+
 ### 3. Initial Setup
 
 The app will be running on `http://localhost:3000`. On first visit:

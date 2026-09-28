@@ -51,8 +51,6 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    env_file:
-      - .env.local
     environment:
       # Connect to MongoDB container via service name
       - MONGODB_URI=mongodb://mongodb:27017
