@@ -7,14 +7,8 @@ import { getModuleAccent } from "@/lib/icon-map";
 import type { ProjectDTO } from "../db/collections";
 import { PRIORITY_META, STATUS_META } from "./statusMeta";
 import { OverviewTab } from "./tabs/OverviewTab";
-import { RepositoriesTab } from "./tabs/RepositoriesTab";
-import { NotesTab } from "./tabs/NotesTab";
-import { FilesTab } from "./tabs/FilesTab";
-import { SecretsTab } from "./tabs/SecretsTab";
-import { MeetingsTab } from "./tabs/MeetingsTab";
-import { LinksTab } from "./tabs/LinksTab";
-import { ContactsTab } from "./tabs/ContactsTab";
-import { EnvironmentsTab } from "./tabs/EnvironmentsTab";
+import { CodeTab } from "./tabs/CodeTab";
+import { DocsTab } from "./tabs/DocsTab";
 import { ActivityTab } from "./tabs/ActivityTab";
 import { SettingsTab } from "./tabs/SettingsTab";
 
@@ -96,16 +90,10 @@ export function ProjectDetail({
       </div>
 
       <Tabs defaultValue="overview" className="flex flex-1 min-h-0 flex-col">
-        <TabsList className="mb-4 flex-wrap self-start">
+        <TabsList className="mb-2 self-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="repositories">Repositories</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="files">Files</TabsTrigger>
-          <TabsTrigger value="secrets">Secrets</TabsTrigger>
-          <TabsTrigger value="meetings">Meetings</TabsTrigger>
-          <TabsTrigger value="links">Links</TabsTrigger>
-          <TabsTrigger value="contacts">Contacts</TabsTrigger>
-          <TabsTrigger value="environments">Environments</TabsTrigger>
+          <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="docs">Docs</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -114,29 +102,11 @@ export function ProjectDetail({
           <TabsContent value="overview">
             <OverviewTab project={project} onProjectUpdated={onProjectUpdated} />
           </TabsContent>
-          <TabsContent value="repositories">
-            <RepositoriesTab project={project} onProjectUpdated={onProjectUpdated} />
+          <TabsContent value="code">
+            <CodeTab project={project} onProjectUpdated={onProjectUpdated} />
           </TabsContent>
-          <TabsContent value="notes">
-            <NotesTab project={project} onProjectUpdated={onProjectUpdated} />
-          </TabsContent>
-          <TabsContent value="files">
-            <FilesTab project={project} onProjectUpdated={onProjectUpdated} />
-          </TabsContent>
-          <TabsContent value="secrets">
-            <SecretsTab project={project} onProjectUpdated={onProjectUpdated} />
-          </TabsContent>
-          <TabsContent value="meetings">
-            <MeetingsTab project={project} onProjectUpdated={onProjectUpdated} />
-          </TabsContent>
-          <TabsContent value="links">
-            <LinksTab project={project} onProjectUpdated={onProjectUpdated} />
-          </TabsContent>
-          <TabsContent value="contacts">
-            <ContactsTab project={project} onProjectUpdated={onProjectUpdated} />
-          </TabsContent>
-          <TabsContent value="environments">
-            <EnvironmentsTab project={project} onProjectUpdated={onProjectUpdated} />
+          <TabsContent value="docs">
+            <DocsTab project={project} onProjectUpdated={onProjectUpdated} />
           </TabsContent>
           <TabsContent value="activity">
             <ActivityTab project={project} onProjectUpdated={onProjectUpdated} />

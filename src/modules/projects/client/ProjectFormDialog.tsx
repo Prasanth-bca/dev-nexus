@@ -17,20 +17,16 @@ export interface ProjectFormValues {
   priority: ProjectPriority;
   tags: string[];
   techStack: string[];
-  startDate: string;
-  targetDate: string;
 }
 
 function toFormValues(project: ProjectDTO | null): ProjectFormValues {
   return {
     name: project?.name ?? "",
     description: project?.description ?? "",
-    status: project?.status ?? "Planning",
+    status: project?.status ?? "Active",
     priority: project?.priority ?? "Medium",
     tags: project?.tags ?? [],
     techStack: project?.techStack ?? [],
-    startDate: project?.startDate ? project.startDate.slice(0, 10) : "",
-    targetDate: project?.targetDate ? project.targetDate.slice(0, 10) : "",
   };
 }
 
@@ -84,7 +80,7 @@ export function ProjectFormDialog({
           <DialogHeader>
             <DialogTitle>{project ? "Edit Project" : "Create Project"}</DialogTitle>
             <DialogDescription>
-              {project ? "Update this project's details." : "Set up a new workspace to organize repos, notes, files, and more."}
+              {project ? "Update this project's details." : "Create a new project in less than a minute. Additional details can be configured later."}
             </DialogDescription>
           </DialogHeader>
 
@@ -133,27 +129,6 @@ export function ProjectFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="project-start">Start Date</Label>
-                <Input
-                  id="project-start"
-                  type="date"
-                  value={values.startDate}
-                  onChange={(e) => setValues((v) => ({ ...v, startDate: e.target.value }))}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="project-target">Target Date</Label>
-                <Input
-                  id="project-target"
-                  type="date"
-                  value={values.targetDate}
-                  onChange={(e) => setValues((v) => ({ ...v, targetDate: e.target.value }))}
-                />
               </div>
             </div>
 
